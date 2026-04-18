@@ -2,62 +2,80 @@ import React from "react";
 
 export const featureSections = [
   {
-    id: "precision",
-    label: "Precision",
+    id: "surface",
+    label: "Chapter 01 · Surface",
     title: (
       <>
-        Digital Crown
+        Where the display
         <br />
-        <span className="text-gray-600">reimagined.</span>
+        <span className="text-zinc-500">meets the carpet.</span>
       </>
     ),
     description:
-      "Effortlessly scroll, zoom, and navigate with the re-engineered Digital Crown. Now more precise, responsive, and intuitive than ever before.",
+      "The interface sits flush on a sculpted foam base. Scroll slows down so you can read how the glass, bezel, and soft landing work together—one continuous story of material and light.",
     contentOnLeft: true,
     features: [
-      { title: "2x brighter display", description: "Up to 3,000 nits for crystal-clear visibility outdoors" },
-      { title: "Ultra-responsive haptics", description: "Precise tactile feedback for every interaction" },
+      {
+        title: "Precision-tuned interface",
+        description: "The face is framed so typography and touch targets stay legible from every angle you see in the scroll.",
+      },
+      {
+        title: "Soft transition to foam",
+        description: "No hard cliff between display and pad: the carpet eases the eye from screen to support.",
+      },
     ],
   },
   {
-    id: "durability",
-    label: "Durability",
+    id: "foundation",
+    label: "Chapter 02 · Foundation",
     title: (
       <>
-        Built to go
+        The carpet
         <br />
-        <span className="text-gray-600">further.</span>
+        <span className="text-zinc-500">has depth.</span>
       </>
     ),
     description:
-      "From deep oceans to high mountains. The rugged titanium case, advanced GPS, and extended battery life are engineered to keep up with your most demanding adventures.",
+      "The foam isn’t decoration—it’s structure. Density, edge radius, and thickness are tuned so the product feels planted but still light. The camera swings to profile so you can read that mass.",
     contentOnLeft: false,
     features: [
-      { title: "Titanium construction", description: "Corrosion-resistant and incredibly durable" },
-      { title: "Specialized bands", description: "Designed for water, trail, and endurance activities" },
-      { title: "72-hour battery life", description: "Extended power with Low Power Mode" },
+      {
+        title: "Engineered thickness",
+        description: "Enough material to absorb vibration and feel premium in the hand, without bulk.",
+      },
+      {
+        title: "Stable footprint",
+        description: "The pad’s contact patch keeps the assembly steady on desk, tray, or nightstand.",
+      },
+      {
+        title: "Made to last",
+        description: "Foam formulation and skin texture chosen for daily wear and easy cleaning.",
+      },
     ],
   },
   {
-    id: "display",
-    label: "Display",
+    id: "presence",
+    label: "Chapter 03 · Presence",
     title: (
       <>
-        The brightest
+        The full
         <br />
-        <span className="text-gray-600">display yet.</span>
+        <span className="text-zinc-500">Firdaus object.</span>
       </>
     ),
     description:
-      "Up to 3,000 nits of brightness means crystal-clear visibility under harsh sun. Advanced ambient sensors intelligently adapt to low-light environments for optimal viewing.",
+      "Pull back to the same wide language as the opening: the whole carpet and display in one frame. This is how Firdaus wants the piece remembered—balanced, calm, complete.",
     contentOnLeft: true,
     features: [],
     customContent: (
-      <div className="animate-in pt-4">
-        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gray-100 backdrop-blur-sm border border-gray-200">
-          <div className="w-2 h-2 rounded-full bg-black" aria-hidden />
-          <span className="text-black text-sm font-medium">Always-on Retina display</span>
-        </div>
+      <div className="pt-4">
+        <a
+          href="#viewer"
+          className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
+        >
+          Open 3D viewer
+          <span aria-hidden>→</span>
+        </a>
       </div>
     ),
   },

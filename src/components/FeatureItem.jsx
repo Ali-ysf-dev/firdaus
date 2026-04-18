@@ -1,10 +1,10 @@
 function FeatureItem({ title, description }) {
   return (
     <div className="animate-in flex items-start gap-4">
-      <div className="w-1.5 h-1.5 rounded-full bg-black mt-2.5 flex-shrink-0" aria-hidden />
+      <div className="mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-zinc-400" aria-hidden />
       <div>
-        <p className="text-black font-medium mb-1">{title}</p>
-        <p className="text-sm text-gray-600">{description}</p>
+        <p className="mb-1 font-medium text-zinc-100">{title}</p>
+        <p className="text-sm text-zinc-400">{description}</p>
       </div>
     </div>
   );

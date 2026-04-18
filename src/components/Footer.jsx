@@ -2,10 +2,25 @@ function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative w-full py-4 bg-white/5 backdrop-blur-sm border-t border-black/5" style={{marginTop: '-50px'}}>
-      <div className="flex items-center justify-center">
-        <p className="text-sm text-black/70">
-          © {year} Ali Youssef. All rights reserved.
+    <footer className="relative w-full bg-transparent px-4 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] sm:px-6">
+      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-6 md:flex-row">
+        <a
+          href="#"
+          className="shrink-0 bg-transparent opacity-95 transition hover:opacity-100"
+          aria-label="Firdaus home"
+        >
+          <img
+            src="/Firdaus_logo.avif"
+            alt="Firdaus"
+            width={180}
+            height={44}
+            className="h-10 w-auto max-w-[12rem] bg-transparent object-contain md:h-11 md:max-w-[13rem]"
+            decoding="async"
+            loading="lazy"
+          />
+        </a>
+        <p className="text-center text-sm text-zinc-500 md:text-right">
+          © {year} Firdaus. Crafted for scroll storytelling and product clarity.
         </p>
       </div>
     </footer>
