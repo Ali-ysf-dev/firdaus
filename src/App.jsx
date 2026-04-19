@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo, Suspense } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
+import { useGLTF } from "@react-three/drei";
 import "./App.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -7,7 +8,11 @@ import Footer from "./components/Footer";
 import HeroSection from "./components/HeroSection";
 import FeatureSection from "./components/FeatureSection";
 import StoryCallouts from "./components/StoryCallouts";
-import ModelViewerSection from "./components/ModelViewerSection";
+import SceneLoadFallback from "./components/SceneLoadFallback.jsx";
+import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
+import { MODEL_TEXTURE_2_URL, MODEL_TEXTURE_3_URL } from "./modelConstants.js";
+
+const ModelViewerSection = lazy(() => import("./components/ModelViewerSection.jsx"));
 import { featureSections } from "./data/sections.jsx";
 import { heroColumnMetrics } from "./heroStoryScroll.js";
 
@@ -31,6 +36,10 @@ function App() {
   const storyEndedRef = useRef(false);
   const [storyEnded, setStoryEnded] = useState(false);
   const [modelReady, setModelReady] = useState(false);
+  const [storyCarpetDesign, setStoryCarpetDesign] = useState("default");
+  const [storyDesignGlitchToken, setStoryDesignGlitchToken] = useState(0);
+  const storyCarpetDesignRef = useRef("default");
+  storyCarpetDesignRef.current = storyCarpetDesign;
   const [viewerInView, setViewerInView] = useState(false);
   const [viewport, setViewport] = useState(() =>
     typeof window !== "undefined"
@@ -80,6 +89,19 @@ function App() {
       cancelAnimationFrame(raf);
       io?.disconnect();
     };
+  }, []);
+
+  useEffect(() => {
+    if (!modelReady) return;
+    useGLTF.preload(MODEL_TEXTURE_2_URL, true, false);
+    useGLTF.preload(MODEL_TEXTURE_3_URL, true, false);
+  }, [modelReady]);
+
+  const onStoryCarpetDesignChange = useCallback((id) => {
+    if (id === storyCarpetDesignRef.current) return;
+    storyCarpetDesignRef.current = id;
+    setStoryCarpetDesign(id);
+    setStoryDesignGlitchToken((t) => t + 1);
   }, []);
 
   const hideFixedHeroScene = storyEnded || viewerInView;
@@ -201,6 +223,8 @@ function App() {
         contentRef={heroContentRef}
         heroCalloutRef={heroCalloutRef}
         anchorScreenRef={anchorScreenRef}
+        storyCarpetDesign={storyCarpetDesign}
+        storyDesignGlitchToken={storyDesignGlitchToken}
       />
 
       <Suspense
@@ -221,12 +245,33 @@ function App() {
             title={section.title}
             description={section.description}
             features={section.features}
-            customContent={section.customContent}
+            customContent={
+              section.id === "presence" ? (
+                <div className="grid gap-6 pt-4">
+                  <CarpetDesignPicker
+                    variant="chapter"
+                    value={storyCarpetDesign}
+                    onChange={onStoryCarpetDesignChange}
+                  />
+                  <a
+                    href="#viewer"
+                    className="inline-flex w-fit items-center gap-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
+                  >
+                    Open 3D viewer
+                    <span aria-hidden>→</span>
+                  </a>
+                </div>
+              ) : (
+                section.customContent
+              )
+            }
           />
         ))}
       </Suspense>
 
-      <ModelViewerSection />
+      <Suspense fallback={<SceneLoadFallback label="Loading viewer…" className="min-h-[min(50dvh,28rem)]" />}>
+        <ModelViewerSection />
+      </Suspense>
 
       <Footer />
     </main>

@@ -1,8 +1,12 @@
-import { Suspense, useLayoutEffect, useRef } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import gsap from "gsap";
-import Sence from "../Sence";
 import { storyCanvasShiftXPx } from "../heroStoryScroll.js";
+import { useAdaptiveDpr } from "../hooks/useAdaptiveDpr.js";
+import SceneLoadFallback from "./SceneLoadFallback.jsx";
+
+const Sence = lazy(() => import("../Sence.jsx"));
 
 function HeroSection({
   sceneRef,
@@ -13,8 +17,24 @@ function HeroSection({
   contentRef,
   heroCalloutRef,
   anchorScreenRef,
+  storyCarpetDesign = "default",
+  storyDesignGlitchToken = 0,
 }) {
   const heroShellRef = useRef(null);
+  const heroGlitchHostRef = useRef(null);
+  const dpr = useAdaptiveDpr();
+
+  const glConfig = useMemo(
+    () => ({
+      antialias: dpr[1] <= 1.35,
+      alpha: true,
+      depth: true,
+      stencil: false,
+      preserveDrawingBuffer: false,
+      powerPreference: "high-performance",
+    }),
+    [dpr],
+  );
 
   useLayoutEffect(() => {
     const el = heroShellRef.current;
@@ -33,6 +53,19 @@ function HeroSection({
       gsap.ticker.remove(id);
     };
   }, [storyProgressRef]);
+
+  useEffect(() => {
+    if (storyDesignGlitchToken === 0) return;
+    const el = heroGlitchHostRef.current;
+    if (!el) return;
+    el.classList.remove("viewer-canvas-glitch");
+    void el.offsetWidth;
+    el.classList.add("viewer-canvas-glitch");
+    const t = window.setTimeout(() => {
+      el.classList.remove("viewer-canvas-glitch");
+    }, 480);
+    return () => window.clearTimeout(t);
+  }, [storyDesignGlitchToken]);
 
   return (
     <section className="relative flex min-h-[100dvh] flex-col overflow-visible bg-transparent md:h-screen md:flex-row">
@@ -96,26 +129,38 @@ function HeroSection({
         aria-hidden={hideFixedHeroScene}
       >
         <div ref={sceneRef} className="absolute inset-0 min-h-0 min-w-0">
-          <Suspense
-            fallback={
-              <div className="flex h-full w-full items-center justify-center bg-zinc-950/80 text-sm text-zinc-500">
-                Loading…
-              </div>
-            }
+          <div
+            ref={heroGlitchHostRef}
+            className="hero-glitch-host viewer-glitch-host relative isolate h-full min-h-0 w-full min-w-0"
           >
             <Canvas
               className="h-full w-full touch-pan-y"
-              dpr={[1, Math.min(1.5, typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1.5)]}
-              gl={{ powerPreference: "high-performance" }}
+              dpr={dpr}
+              gl={glConfig}
+              frameloop="always"
+              flat
+              linear
               style={{ pointerEvents: hideFixedHeroScene ? "none" : "auto" }}
             >
-              <Sence
-                storyProgressRef={storyProgressRef}
-                onModelLoad={onModelLoad}
-                anchorScreenRef={anchorScreenRef}
-              />
+              <Suspense
+                fallback={
+                  <Html center transform prepend zIndexRange={[100, 0]} style={{ pointerEvents: "none" }}>
+                    <SceneLoadFallback
+                      label="Loading story scene…"
+                      className="!min-h-0 min-w-[200px] rounded-xl border border-zinc-800/80 bg-zinc-950/95 px-6 py-8 shadow-xl backdrop-blur-sm"
+                    />
+                  </Html>
+                }
+              >
+                <Sence
+                  storyProgressRef={storyProgressRef}
+                  onModelLoad={onModelLoad}
+                  anchorScreenRef={anchorScreenRef}
+                  storyCarpetDesign={storyCarpetDesign}
+                />
+              </Suspense>
             </Canvas>
-          </Suspense>
+          </div>
         </div>
       </div>
     </section>

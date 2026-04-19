@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Environment, PerspectiveCamera, OrbitControls, Center } from '@react-three/drei'
 import * as THREE from 'three'
@@ -85,7 +85,7 @@ function StoryAnchors({ displayRef, foamRef, anchorScreenRef }) {
   return null
 }
 
-function Sence({ storyProgressRef, onModelLoad, anchorScreenRef }) {
+function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesign = 'default' }) {
   const cameraref = useRef(null)
   const modelRef = useRef(null)
   const responsiveScaleRef = useRef(null)
@@ -101,6 +101,10 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef }) {
   const vCamNext = useRef(new THREE.Vector3())
   const vDispZoom = useRef(new THREE.Vector3())
   const hasSetBoundsCenter = useRef(false)
+
+  useLayoutEffect(() => {
+    hasSetBoundsCenter.current = false
+  }, [storyCarpetDesign])
 
   useFrame((state) => {
     if (!cameraref.current) return
@@ -205,12 +209,15 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef }) {
         far={1000}
         position={[3.4821563489882656, 1.219071606362784, 5.929245271644066]}
       />
-      <Environment preset="city" background={false} />
+      <Environment preset="studio" background={false} />
       <Center>
         <group ref={responsiveScaleRef}>
           <Carpet
+            key={storyCarpetDesign}
             ref={modelRef}
+            design={storyCarpetDesign}
             progress={0}
+            shadowsEnabled={false}
             displayRef={displayRef}
             foamRef={foamRef}
             onModelReady={onModelLoad}

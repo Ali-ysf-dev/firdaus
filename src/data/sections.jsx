@@ -67,16 +67,5 @@ export const featureSections = [
       "Pull back to the same wide language as the opening: the whole carpet and display in one frame. This is how Firdaus wants the piece remembered—balanced, calm, complete.",
     contentOnLeft: true,
     features: [],
-    customContent: (
-      <div className="pt-4">
-        <a
-          href="#viewer"
-          className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
-        >
-          Open 3D viewer
-          <span aria-hidden>→</span>
-        </a>
-      </div>
-    ),
   },
 ];

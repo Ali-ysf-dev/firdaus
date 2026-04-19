@@ -1,12 +1,28 @@
-import { Suspense, forwardRef, useLayoutEffect } from "react";
+import {
+  Suspense,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, Environment, Center, ContactShadows, Bounds } from "@react-three/drei";
+import { OrbitControls, Environment, Center, ContactShadows, Bounds, Html } from "@react-three/drei";
 import { Carpet } from "../carpet";
 import {
   VIEWER_BOUNDS_MARGIN,
   VIEWER_CAMERA_FOV,
   VIEWER_CAMERA_POSITION,
 } from "../viewerConstants.js";
+import { useAdaptiveDpr } from "../hooks/useAdaptiveDpr.js";
+import SceneLoadFallback from "./SceneLoadFallback.jsx";
+import CarpetDesignPicker from "./CarpetDesignPicker.jsx";
+
+function ViewerCarpet({ design }) {
+  return <Carpet design={design} />;
+}
 
 function ViewerPerspectiveFit() {
   const camera = useThree((s) => s.camera);
@@ -19,25 +35,19 @@ function ViewerPerspectiveFit() {
   return null;
 }
 
-function ViewerScene() {
+function ViewerScene({ design }) {
   return (
     <>
       <color attach="background" args={["#18181b"]} />
       <ambientLight intensity={0.55} />
       <directionalLight position={[4, 6, 3]} intensity={1.1} castShadow />
-      <Environment preset="city" />
+      <Environment preset="studio" />
       <Bounds fit clip observe margin={VIEWER_BOUNDS_MARGIN}>
         <Center>
-          <Carpet />
+          <ViewerCarpet design={design} />
         </Center>
       </Bounds>
-      <ContactShadows
-        position={[0, -0.12, 0]}
-        opacity={0.45}
-        scale={12}
-        blur={2.2}
-        far={4}
-      />
+      <ContactShadows position={[0, -0.12, 0]} opacity={0.45} scale={12} blur={2.2} far={4} />
       <OrbitControls
         makeDefault
         enablePan
@@ -45,12 +55,53 @@ function ViewerScene() {
         minDistance={0.45}
         maxDistance={9}
         target={[0, 0, 0]}
+        enableDamping
+        dampingFactor={0.08}
       />
     </>
   );
 }
 
 const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
+  const [viewerCarpetDesign, setViewerCarpetDesign] = useState("default");
+  const [viewerDesignGlitchToken, setViewerDesignGlitchToken] = useState(0);
+  const viewerDesignRef = useRef("default");
+  viewerDesignRef.current = viewerCarpetDesign;
+
+  const onViewerCarpetDesignChange = useCallback((id) => {
+    if (id === viewerDesignRef.current) return;
+    viewerDesignRef.current = id;
+    setViewerCarpetDesign(id);
+    setViewerDesignGlitchToken((t) => t + 1);
+  }, []);
+
+  const glitchWrapRef = useRef(null);
+  const dpr = useAdaptiveDpr();
+  const glConfig = useMemo(
+    () => ({
+      antialias: dpr[1] <= 1.5,
+      alpha: true,
+      depth: true,
+      stencil: false,
+      preserveDrawingBuffer: false,
+      powerPreference: "high-performance",
+    }),
+    [dpr],
+  );
+
+  useEffect(() => {
+    if (viewerDesignGlitchToken === 0) return;
+    const el = glitchWrapRef.current;
+    if (!el) return;
+    el.classList.remove("viewer-canvas-glitch");
+    void el.offsetWidth;
+    el.classList.add("viewer-canvas-glitch");
+    const t = window.setTimeout(() => {
+      el.classList.remove("viewer-canvas-glitch");
+    }, 480);
+    return () => window.clearTimeout(t);
+  }, [viewerDesignGlitchToken]);
+
   return (
     <section
       id="viewer"
@@ -69,20 +120,29 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
         </p>
 
         <div className="mt-8 overflow-hidden rounded-2xl bg-zinc-900/80 shadow-[0_25px_80px_-20px_rgba(0,0,0,0.5)] sm:mt-10 sm:rounded-3xl">
+          <div className="border-b border-zinc-800/70 bg-zinc-950/35 px-3 py-3 sm:px-4">
+            <CarpetDesignPicker
+              variant="viewer"
+              value={viewerCarpetDesign}
+              onChange={onViewerCarpetDesignChange}
+            />
+          </div>
           <div
-            ref={ref}
-            className="aspect-[3/4] w-full min-h-[220px] min-[400px]:aspect-[4/5] min-[520px]:aspect-[16/10] md:aspect-[2/1]"
+            ref={glitchWrapRef}
+            className="viewer-glitch-host relative isolate min-h-0 w-full overflow-hidden"
           >
-            <Suspense
-              fallback={
-                <div className="flex h-full w-full items-center justify-center bg-zinc-900 text-zinc-500">
-                  Loading model…
-                </div>
-              }
+            <div
+              ref={ref}
+              className="aspect-[3/4] w-full min-h-[220px] min-[400px]:aspect-[4/5] min-[520px]:aspect-[16/10] md:aspect-[2/1]"
             >
               <Canvas
                 shadows
-                dpr={[1, Math.min(2, typeof window !== "undefined" ? window.devicePixelRatio || 1 : 2)]}
+                dpr={dpr}
+                gl={glConfig}
+                frameloop="always"
+                flat
+                linear
+                resize={{ debounce: { scroll: 50, resize: 0 } }}
                 camera={{
                   position: [...VIEWER_CAMERA_POSITION],
                   fov: VIEWER_CAMERA_FOV,
@@ -91,10 +151,21 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
                 }}
                 className="h-full w-full touch-none"
               >
-                <ViewerPerspectiveFit />
-                <ViewerScene />
+                <Suspense
+                  fallback={
+                    <Html center transform prepend zIndexRange={[100, 0]} style={{ pointerEvents: "none" }}>
+                      <SceneLoadFallback
+                        label="Loading model…"
+                        className="!min-h-0 min-w-[220px] rounded-xl border border-zinc-800/80 bg-zinc-950/95 px-6 py-8 shadow-xl backdrop-blur-sm"
+                      />
+                    </Html>
+                  }
+                >
+                  <ViewerPerspectiveFit />
+                  <ViewerScene design={viewerCarpetDesign} />
+                </Suspense>
               </Canvas>
-            </Suspense>
+            </div>
           </div>
           <p className="px-4 py-3 text-center text-xs text-zinc-500">
             Interactive viewer · pinch & drag on mobile, scroll to zoom on desktop
