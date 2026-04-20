@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef } from "rea
 import { Canvas } from "@react-three/fiber";
 import { storyCanvasShiftXPx } from "../heroStoryScroll.js";
 import { useAdaptiveDpr } from "../hooks/useAdaptiveDpr.js";
+import { createDefaultGlConfig } from "../webglDefaults.js";
 
 const Sence = lazy(() => import("../Sence.jsx"));
 
@@ -15,7 +16,6 @@ function HeroSection({
   onModelLoad,
   contentRef,
   heroCalloutRef,
-  anchorScreenRef,
   storyCarpetDesign = "default",
   storyDesignGlitchToken = 0,
 }) {
@@ -43,14 +43,7 @@ function HeroSection({
   }, [freezeHeroShellShift]);
 
   const glConfig = useMemo(
-    () => ({
-      antialias: dpr[1] <= 1.35,
-      alpha: true,
-      depth: true,
-      stencil: false,
-      preserveDrawingBuffer: false,
-      powerPreference: "high-performance",
-    }),
+    () => createDefaultGlConfig({ antialias: dpr[1] <= 1.35 }),
     [dpr],
   );
 
@@ -179,7 +172,6 @@ function HeroSection({
                 <Sence
                   storyProgressRef={storyProgressRef}
                   onModelLoad={onModelLoad}
-                  anchorScreenRef={anchorScreenRef}
                   storyCarpetDesign={storyCarpetDesign}
                 />
               </Suspense>

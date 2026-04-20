@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, Environment, Center, ContactShadows, Bounds, Html } from "@react-three/drei";
+import { OrbitControls, Center, Bounds, Html } from "@react-three/drei";
 import { Carpet } from "../carpet";
 import {
   VIEWER_BOUNDS_MARGIN,
@@ -17,6 +17,7 @@ import {
   VIEWER_CAMERA_POSITION,
 } from "../viewerConstants.js";
 import { useAdaptiveDpr } from "../hooks/useAdaptiveDpr.js";
+import { createDefaultGlConfig } from "../webglDefaults.js";
 import SceneLoadFallback from "./SceneLoadFallback.jsx";
 import CarpetDesignPicker from "./CarpetDesignPicker.jsx";
 
@@ -39,15 +40,14 @@ function ViewerScene({ design }) {
   return (
     <>
       <color attach="background" args={["#18181b"]} />
-      <ambientLight intensity={0.55} />
-      <directionalLight position={[4, 6, 3]} intensity={1.1} castShadow />
-      <Environment preset="studio" />
-      <Bounds fit clip observe margin={VIEWER_BOUNDS_MARGIN}>
+      <ambientLight intensity={0.52} />
+      <directionalLight position={[4.5, 7.5, 4]} intensity={1.05} />
+      <directionalLight position={[-3.5, 2.5, -2.5]} intensity={0.38} color="#c4c4d4" />
+      <Bounds fit clip observe={false} margin={VIEWER_BOUNDS_MARGIN}>
         <Center>
           <ViewerCarpet design={design} />
         </Center>
       </Bounds>
-      <ContactShadows position={[0, -0.12, 0]} opacity={0.45} scale={12} blur={2.2} far={4} />
       <OrbitControls
         makeDefault
         enablePan
@@ -79,14 +79,7 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
   const glitchWrapRef = useRef(null);
   const dpr = useAdaptiveDpr();
   const glConfig = useMemo(
-    () => ({
-      antialias: dpr[1] <= 1.5,
-      alpha: true,
-      depth: true,
-      stencil: false,
-      preserveDrawingBuffer: false,
-      powerPreference: "high-performance",
-    }),
+    () => createDefaultGlConfig({ antialias: dpr[1] <= 1.25 }),
     [dpr],
   );
 
@@ -169,7 +162,6 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
               className="aspect-[3/4] w-full min-h-[220px] min-[400px]:aspect-[4/5] min-[520px]:aspect-[16/10] md:aspect-[2/1]"
             >
               <Canvas
-                shadows
                 dpr={dpr}
                 gl={glConfig}
                 frameloop={viewerSectionVisible ? "always" : "never"}

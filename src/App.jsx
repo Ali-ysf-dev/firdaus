@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
-import { useGLTF } from "@react-three/drei";
 import "./App.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -11,8 +10,6 @@ import FeatureSection from "./components/FeatureSection";
 import StoryCallouts from "./components/StoryCallouts";
 import SceneLoadFallback from "./components/SceneLoadFallback.jsx";
 import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
-import { MODEL_TEXTURE_2_URL, MODEL_TEXTURE_3_URL } from "./modelConstants.js";
-
 const ModelViewerSection = lazy(() => import("./components/ModelViewerSection.jsx"));
 import { featureSections } from "./data/sections.jsx";
 import { heroColumnMetrics } from "./heroStoryScroll.js";
@@ -25,8 +22,6 @@ function App() {
   const sceneRef = useRef(null);
   const heroContentRef = useRef(null);
   const heroCalloutRef = useRef(null);
-  const anchorScreenRef = useRef({ display: null, foam: null, center: null });
-
   const surfaceContentRef = useRef(null);
   const foundationContentRef = useRef(null);
   const presenceContentRef = useRef(null);
@@ -102,12 +97,6 @@ function App() {
       io?.disconnect();
     };
   }, []);
-
-  useEffect(() => {
-    if (!modelReady) return;
-    useGLTF.preload(MODEL_TEXTURE_2_URL, true, false);
-    useGLTF.preload(MODEL_TEXTURE_3_URL, true, false);
-  }, [modelReady]);
 
   const onStoryCarpetDesignChange = useCallback((id) => {
     if (id === storyCarpetDesignRef.current) return;
@@ -244,7 +233,6 @@ function App() {
         {appReadyToShow ? <Header /> : null}
 
         <StoryCallouts
-          anchorScreenRef={anchorScreenRef}
           heroCalloutRef={heroCalloutRef}
           surfaceCardRef={surfaceContentRef}
           foundationCardRef={foundationContentRef}
@@ -261,7 +249,6 @@ function App() {
           onModelLoad={() => setTimeout(() => setModelReady(true), 500)}
           contentRef={heroContentRef}
           heroCalloutRef={heroCalloutRef}
-          anchorScreenRef={anchorScreenRef}
           storyCarpetDesign={storyCarpetDesign}
           storyDesignGlitchToken={storyDesignGlitchToken}
         />
