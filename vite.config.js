@@ -20,6 +20,9 @@ export default defineConfig({
           if (id.includes("@react-three/drei")) {
             return "drei";
           }
+          if (id.includes("node_modules/gsap")) {
+            return "gsap";
+          }
         },
       },
     },

@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Environment, PerspectiveCamera, OrbitControls, Center } from '@react-three/drei'
+import { PerspectiveCamera, OrbitControls, Center } from '@react-three/drei'
 import * as THREE from 'three'
 import { Carpet } from './carpet.jsx'
 
@@ -202,7 +202,12 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
         far={1000}
         position={[3.4821563489882656, 1.219071606362784, 5.929245271644066]}
       />
-      <Environment preset="studio" background={false} />
+      <ambientLight intensity={3.36} />
+      <hemisphereLight args={['#ffffff', '#505058']} intensity={2.64} />
+      <directionalLight position={[4.5, 8, 5]} intensity={5.25} />
+      <directionalLight position={[-4, 4, -3]} intensity={2.46} />
+      <directionalLight position={[0, 6, 8]} intensity={2.16} />
+      <directionalLight position={[-2, 9, -6]} intensity={1.65} />
       <Center>
         <group ref={responsiveScaleRef}>
           <Carpet

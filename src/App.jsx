@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
 import { useGLTF } from "@react-three/drei";
 import "./App.css";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Header from "./components/Header";
 import WelcomeIntro from "./components/WelcomeIntro.jsx";
 import Footer from "./components/Footer";
@@ -12,13 +10,11 @@ import StoryCallouts from "./components/StoryCallouts";
 import SceneLoadFallback from "./components/SceneLoadFallback.jsx";
 import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
 import { MODEL_TEXTURE_2_URL, MODEL_TEXTURE_3_URL } from "./modelConstants.js";
-
-const ModelViewerSection = lazy(() => import("./components/ModelViewerSection.jsx"));
 import { featureSections } from "./data/sections.jsx";
 import { heroColumnMetrics } from "./heroStoryScroll.js";
 import { useMobilePortraitGate } from "./hooks/useMobilePortraitGate.js";
 
-gsap.registerPlugin(ScrollTrigger);
+const ModelViewerSection = lazy(() => import("./components/ModelViewerSection.jsx"));
 
 function App() {
   const mainref = useRef(null);
@@ -70,6 +66,28 @@ function App() {
   /** When the viewer block is on screen, latch the hero shell shift so further downward scroll does not nudge the story canvas. */
   const [freezeHeroShellShift, setFreezeHeroShellShift] = useState(false);
 
+  const [gsapLibsReady, setGsapLibsReady] = useState(false);
+  const gsapRef = useRef(null);
+  const scrollTriggerRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([import("gsap"), import("gsap/ScrollTrigger")])
+      .then(([gMod, stMod]) => {
+        if (cancelled) return;
+        const g = gMod.default;
+        const ST = stMod.ScrollTrigger;
+        g.registerPlugin(ST);
+        gsapRef.current = g;
+        scrollTriggerRef.current = ST;
+        setGsapLibsReady(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     let io;
     let cancelled = false;
@@ -120,7 +138,11 @@ function App() {
   const hideFixedHeroScene = false;
 
   useEffect(() => {
+    if (!gsapLibsReady || !gsapRef.current || !scrollTriggerRef.current) return;
     if (!mainref.current || !sceneRef.current) return;
+
+    const gsap = gsapRef.current;
+    const ScrollTrigger = scrollTriggerRef.current;
 
     let st;
     let ctx;
@@ -165,7 +187,7 @@ function App() {
       st?.kill();
       ctx?.revert();
     };
-  }, []);
+  }, [gsapLibsReady]);
 
   useEffect(() => {
     let lastW = window.innerWidth;
@@ -179,7 +201,7 @@ function App() {
       lastW = w;
       lastH = h;
       setViewport({ w, h });
-      ScrollTrigger.refresh();
+      scrollTriggerRef.current?.refresh();
     };
 
     const onResize = () => {
@@ -195,13 +217,14 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!modelReady) return;
+    if (!modelReady || !gsapLibsReady || !gsapRef.current) return;
 
+    const gsap = gsapRef.current;
     const ctx = gsap.context(() => {
-      const contentRefs = [heroContentRef, ...featureContentRefs];
-      contentRefs.forEach((ref) => {
+      featureContentRefs.forEach((ref) => {
         if (!ref.current) return;
         const children = ref.current.querySelectorAll(".animate-in");
+        if (!children.length) return;
         gsap.fromTo(
           children,
           { opacity: 0, y: 60 },
@@ -224,7 +247,7 @@ function App() {
 
     return () => ctx.revert();
   // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
-  }, [modelReady]);
+  }, [modelReady, gsapLibsReady]);
 
   const blockPortraitMobile = useMobilePortraitGate();
   const appReadyToShow = modelReady && !blockPortraitMobile;

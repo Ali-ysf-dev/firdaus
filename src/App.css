@@ -26,6 +26,12 @@ body,
   transform: translateY(60px);
 }
 
+/* Hero copy stays visible for fast LCP; chapter sections still use .animate-in */
+.hero-readable {
+  opacity: 1;
+  transform: none;
+}
+
 .arrDown{
   animation: anime infinite 1.5s linear;
 }
