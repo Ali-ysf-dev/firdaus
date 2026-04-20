@@ -85,3 +85,26 @@ body,
 .read-the-docs {
   color: #888;
 } */
+
+/* Welcome screen: hint to rotate device (mobile portrait) */
+@media (prefers-reduced-motion: no-preference) {
+  .welcome-rotate-phone {
+    animation: welcome-rotate-phone 2.6s ease-in-out infinite;
+    transform-origin: 50% 55%;
+  }
+}
+
+@keyframes welcome-rotate-phone {
+  0%,
+  18% {
+    transform: rotate(0deg);
+  }
+  42%,
+  58% {
+    transform: rotate(90deg);
+  }
+  82%,
+  100% {
+    transform: rotate(0deg);
+  }
+}

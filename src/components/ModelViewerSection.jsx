@@ -65,6 +65,7 @@ function ViewerScene({ design }) {
 const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
   const [viewerCarpetDesign, setViewerCarpetDesign] = useState("default");
   const [viewerDesignGlitchToken, setViewerDesignGlitchToken] = useState(0);
+  const [viewerSectionVisible, setViewerSectionVisible] = useState(false);
   const viewerDesignRef = useRef("default");
   viewerDesignRef.current = viewerCarpetDesign;
 
@@ -90,6 +91,38 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
   );
 
   useEffect(() => {
+    let io;
+    let cancelled = false;
+    let raf = 0;
+    let attempts = 0;
+    const maxAttempts = 240;
+
+    const bind = () => {
+      if (cancelled) return;
+      const root = document.getElementById("viewer");
+      attempts += 1;
+      if (!root) {
+        if (attempts < maxAttempts) raf = requestAnimationFrame(bind);
+        return;
+      }
+      io = new IntersectionObserver(
+        ([e]) => {
+          setViewerSectionVisible(Boolean(e?.isIntersecting));
+        },
+        { root: null, rootMargin: "12% 0px 12% 0px", threshold: [0, 0.05, 0.15] },
+      );
+      io.observe(root);
+    };
+
+    raf = requestAnimationFrame(bind);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      io?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     if (viewerDesignGlitchToken === 0) return;
     const el = glitchWrapRef.current;
     if (!el) return;
@@ -105,9 +138,9 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
   return (
     <section
       id="viewer"
-      className="relative z-[40] min-h-screen bg-transparent px-4 py-20 md:px-10"
+      className="relative isolate min-h-screen scroll-mt-24 border-t border-zinc-800/90 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-20 shadow-[0_-32px_64px_-20px_rgba(0,0,0,0.55)] md:px-10"
     >
-      <div className="mx-auto max-w-5xl">
+      <div className="relative mx-auto max-w-5xl">
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-500">
           Firdaus
         </p>
@@ -139,10 +172,10 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
                 shadows
                 dpr={dpr}
                 gl={glConfig}
-                frameloop="always"
+                frameloop={viewerSectionVisible ? "always" : "never"}
                 flat
                 linear
-                resize={{ debounce: { scroll: 50, resize: 0 } }}
+                resize={{ debounce: { scroll: 50, resize: 120 } }}
                 camera={{
                   position: [...VIEWER_CAMERA_POSITION],
                   fov: VIEWER_CAMERA_FOV,

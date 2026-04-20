@@ -9,8 +9,6 @@ const FOV_HERO = 48
 const FOV_DISPLAY_DETAIL = 26
 /** Durability: wider than display detail so the full watch + carpet stay in frame */
 const FOV_DURABILITY = 42
-/** Extra FOV narrowing at end of Surface band (on top of story FOV frozen at hero→surface boundary). */
-const FOV_SURFACE_ZOOM_EXTRA = 14
 
 const CAM_KEYFRAMES = [
   [0.013019456785087532, 0.1325220176781472, 2.167749760178603],
@@ -32,6 +30,8 @@ function segmentLocal(progress, index) {
 /** App scroll: Surface chapter ≈ [0.25, 0.5). */
 const SURFACE_START = 0.25
 const SURFACE_END = 0.5
+/** After Surface, ease camera from hero-boundary rig into scroll-driven path (normalized story progress). */
+const SURFACE_BLEND_OUT = 0.055
 
 function storyCameraWorld(progress, vCenter, outPos) {
   const p = Math.min(1, progress)
@@ -97,9 +97,8 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
   const vFoamBlend = useRef(new THREE.Vector3())
   const vLook = useRef(new THREE.Vector3())
   const vStoryPos = useRef(new THREE.Vector3())
-  const vCamLock25 = useRef(new THREE.Vector3())
-  const vCamNext = useRef(new THREE.Vector3())
-  const vDispZoom = useRef(new THREE.Vector3())
+  const vCamSurfHold = useRef(new THREE.Vector3())
+  const vCamSurfEnd = useRef(new THREE.Vector3())
   const hasSetBoundsCenter = useRef(false)
 
   useLayoutEffect(() => {
@@ -129,8 +128,9 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
 
     const p = Math.min(1, Math.max(0, storyProgressRef?.current ?? 0))
     const inSurface = p >= SURFACE_START && p < SURFACE_END
-    /** Story look/FOV use the hero→surface boundary so Surface is zoom-only on a fixed rig. */
-    const pStory = inSurface ? SURFACE_START : p
+    const inSurfaceBlendOut = p >= SURFACE_END && p < SURFACE_END + SURFACE_BLEND_OUT
+    /** During Surface (and a short blend after), keep look/FOV locked to the hero→Surface boundary. */
+    const pStory = inSurface || inSurfaceBlendOut ? SURFACE_START : p
     const u0 = segmentLocal(pStory, 0)
     const u1 = segmentLocal(pStory, 1)
     const u2 = segmentLocal(pStory, 2)
@@ -172,25 +172,18 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
       storyFov = THREE.MathUtils.lerp(FOV_DURABILITY, FOV_HERO, u2)
     }
 
+    /** Chapter 1 (Surface): same camera position as hero end; then blend into scroll path. */
     if (p < SURFACE_START) {
       storyCameraWorld(p, vCenter.current, vStoryPos.current)
-    } else if (p < SURFACE_END - 0.02) {
-      storyCameraWorld(SURFACE_START, vCenter.current, vStoryPos.current)
     } else if (p < SURFACE_END) {
-      storyCameraWorld(SURFACE_START, vCenter.current, vCamLock25.current)
-      storyCameraWorld(p, vCenter.current, vCamNext.current)
-      const t = smoothstep01((p - (SURFACE_END - 0.02)) / 0.02)
-      vStoryPos.current.lerpVectors(vCamLock25.current, vCamNext.current, t)
+      storyCameraWorld(SURFACE_START, vCenter.current, vStoryPos.current)
+    } else if (inSurfaceBlendOut) {
+      const t = smoothstep01((p - SURFACE_END) / SURFACE_BLEND_OUT)
+      storyCameraWorld(SURFACE_START, vCenter.current, vCamSurfHold.current)
+      storyCameraWorld(SURFACE_END, vCenter.current, vCamSurfEnd.current)
+      vStoryPos.current.lerpVectors(vCamSurfHold.current, vCamSurfEnd.current, t)
     } else {
       storyCameraWorld(p, vCenter.current, vStoryPos.current)
-    }
-
-    if (inSurface && displayRef.current) {
-      displayRef.current.getWorldPosition(vDispZoom.current)
-      vDispZoom.current.y -= 0.01
-      const surfaceT = smoothstep01((p - SURFACE_START) / (SURFACE_END - SURFACE_START))
-      vLook.current.lerp(vDispZoom.current, 0.82 * surfaceT)
-      storyFov = Math.max(12, storyFov - FOV_SURFACE_ZOOM_EXTRA * surfaceT)
     }
 
     cameraref.current.position.copy(vStoryPos.current)

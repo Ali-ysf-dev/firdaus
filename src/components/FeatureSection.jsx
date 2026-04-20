@@ -6,6 +6,7 @@ function FeatureSection({
   id,
   contentRef,
   sectionRef,
+  storyScrollEndRef,
   contentOnLeft = true,
   label,
   title,
@@ -22,6 +23,13 @@ function FeatureSection({
         isFirstChapter ? "overflow-visible" : ""
       }`}
     >
+      {storyScrollEndRef ? (
+        <div
+          ref={storyScrollEndRef}
+          className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-px w-px -translate-x-1/2 -translate-y-1/2 opacity-0"
+          aria-hidden
+        />
+      ) : null}
       {isFirstChapter && (
         <>
           <div
@@ -34,13 +42,15 @@ function FeatureSection({
           />
         </>
       )}
-      <div className="relative z-[32] flex min-h-0 w-full flex-1 flex-col items-stretch justify-center px-3 py-8 sm:px-4 md:flex-row md:items-center md:justify-between md:px-0 md:py-0">
-        {contentOnLeft && <div className="hidden w-[50%] md:block" aria-hidden />}
+      <div className="relative z-[32] flex min-h-0 w-full flex-1 flex-col items-stretch justify-center px-3 py-8 sm:px-4 max-md:landscape:flex-row max-md:landscape:items-center max-md:landscape:px-5 max-md:landscape:py-5 md:flex-row md:items-center md:justify-between md:px-0 md:py-0">
+        {contentOnLeft && (
+          <div className="hidden w-[50%] max-md:landscape:block md:block" aria-hidden />
+        )}
         <div
           ref={contentRef}
-          className={`flex w-full max-w-2xl shrink-0 flex-col self-center md:w-1/2 md:max-w-none ${contentOnLeft ? "" : "md:order-1"}`}
+          className={`flex w-full max-w-2xl shrink-0 flex-col self-center max-md:landscape:w-1/2 max-md:landscape:max-w-none md:w-1/2 md:max-w-none ${contentOnLeft ? "" : "md:order-1"}`}
         >
-          <ContentCard contentOnLeft={contentOnLeft} fullWidth className="mx-0 sm:mx-4">
+          <ContentCard contentOnLeft={contentOnLeft} fullWidth className="mx-0 sm:mx-4 max-md:landscape:mx-2">
             <div className="space-y-6">
               <div className="animate-in inline-block">
                 <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</span>
@@ -67,7 +77,9 @@ function FeatureSection({
             edgeAlign={contentOnLeft ? "right" : "left"}
           />
         </div>
-        {!contentOnLeft && <div className="order-2 hidden w-[50%] md:block" aria-hidden />}
+        {!contentOnLeft && (
+          <div className="order-2 hidden w-[50%] max-md:landscape:block md:block" aria-hidden />
+        )}
       </div>
     </section>
   );
