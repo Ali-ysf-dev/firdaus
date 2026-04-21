@@ -15,7 +15,6 @@ function App() {
   const sceneRef = useRef(null);
   const heroContentRef = useRef(null);
   const heroCalloutRef = useRef(null);
-  const anchorScreenRef = useRef({ display: null, foam: null, center: null });
 
   const surfaceContentRef = useRef(null);
   const foundationContentRef = useRef(null);
@@ -30,6 +29,7 @@ function App() {
   const [storyDesignGlitchToken, setStoryDesignGlitchToken] = useState(0);
   const storyCarpetDesignRef = useRef("default");
   storyCarpetDesignRef.current = storyCarpetDesign;
+  const requestHeroFrameRef = useRef(() => {});
   /** Hero shell translate; invoked from ScrollTrigger scrub so it stays in sync without a global ticker. */
   const heroShellLayoutSyncRef = useRef(() => {});
   /** Marks vertical midpoint of chapter 3 (Presence) — story scroll progress completes here. */
@@ -143,6 +143,7 @@ function App() {
             const v = Math.min(1, Math.max(0, self.progress));
             storyProgressRef.current = v;
             heroShellLayoutSyncRef.current();
+            requestHeroFrameRef.current();
           },
         });
         requestAnimationFrame(() => ScrollTrigger.refresh());
@@ -237,7 +238,7 @@ function App() {
         onModelLoad={onHeroModelLoad}
         contentRef={heroContentRef}
         heroCalloutRef={heroCalloutRef}
-        anchorScreenRef={anchorScreenRef}
+        requestHeroFrameRef={requestHeroFrameRef}
         storyCarpetDesign={storyCarpetDesign}
         storyDesignGlitchToken={storyDesignGlitchToken}
       />

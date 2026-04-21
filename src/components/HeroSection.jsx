@@ -14,7 +14,7 @@ function HeroSection({
   onModelLoad,
   contentRef,
   heroCalloutRef,
-  anchorScreenRef,
+  requestHeroFrameRef,
   storyCarpetDesign = "default",
   storyDesignGlitchToken = 0,
 }) {
@@ -70,22 +70,21 @@ function HeroSection({
           : pLive;
       const x = storyCanvasShiftXPx(pShift, w, h);
       el.style.transform = `translate3d(${x}px, 0, 0)`;
+      requestHeroFrameRef?.current();
     };
 
     syncShellShift();
     if (heroShellLayoutSyncRef) {
       heroShellLayoutSyncRef.current = syncShellShift;
     }
-    window.addEventListener("scroll", syncShellShift, { passive: true });
     window.addEventListener("resize", syncShellShift, { passive: true });
     return () => {
       if (heroShellLayoutSyncRef) {
         heroShellLayoutSyncRef.current = () => {};
       }
-      window.removeEventListener("scroll", syncShellShift);
       window.removeEventListener("resize", syncShellShift);
     };
-  }, [heroShellLayoutSyncRef, storyProgressRef]);
+  }, [heroShellLayoutSyncRef, requestHeroFrameRef, storyProgressRef]);
 
   useLayoutEffect(() => {
     const el = heroShellRef.current;
@@ -181,7 +180,7 @@ function HeroSection({
                 hideFixedHeroScene={hideFixedHeroScene}
                 storyProgressRef={storyProgressRef}
                 onModelLoad={onModelLoad}
-                anchorScreenRef={anchorScreenRef}
+                requestHeroFrameRef={requestHeroFrameRef}
                 storyCarpetDesign={storyCarpetDesign}
               />
             </Suspense>

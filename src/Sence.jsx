@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { PerspectiveCamera, OrbitControls, Center } from '@react-three/drei'
 import { Box3, MathUtils, Vector3 } from 'three'
 import { Carpet } from './carpet.jsx'
@@ -48,44 +48,7 @@ function storyCameraWorld(progress, vCenter, outPos) {
   outPos.set(sx + (ex - sx) * percentage, sy + (ey - sy) * percentage, sz + (ez - sz) * percentage).add(vCenter)
 }
 
-function StoryAnchors({ displayRef, foamRef, anchorScreenRef }) {
-  const { camera, gl } = useThree()
-  const v = useRef(new Vector3())
-  const vp = useRef(new Vector3())
-
-  useFrame(() => {
-    if (!anchorScreenRef) return
-    const rect = gl.domElement.getBoundingClientRect()
-    const project = (world) => {
-      vp.current.copy(world)
-      vp.current.project(camera)
-      if (vp.current.z < -1 || vp.current.z > 1) return null
-      if (Math.abs(vp.current.x) > 1.2 || Math.abs(vp.current.y) > 1.2) return null
-      return {
-        x: rect.left + (vp.current.x * 0.5 + 0.5) * rect.width,
-        y: rect.top + (-vp.current.y * 0.5 + 0.5) * rect.height,
-      }
-    }
-
-    const out = { display: null, foam: null, center: null }
-    out.center = project(new Vector3(0, 0, 0))
-
-    if (displayRef.current) {
-      displayRef.current.getWorldPosition(v.current)
-      v.current.y -= 0.012
-      out.display = project(v.current)
-    }
-    if (foamRef.current) {
-      foamRef.current.getWorldPosition(v.current)
-      v.current.y -= 0.03
-      out.foam = project(v.current)
-    }
-    anchorScreenRef.current = out
-  })
-  return null
-}
-
-function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesign = 'default' }) {
+function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' }) {
   const cameraref = useRef(null)
   const modelRef = useRef(null)
   const responsiveScaleRef = useRef(null)
@@ -100,6 +63,9 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
   const vCamSurfHold = useRef(new Vector3())
   const vCamSurfEnd = useRef(new Vector3())
   const hasSetBoundsCenter = useRef(false)
+  const boundsBox = useRef(new Box3())
+  const lastScaleMul = useRef(1)
+  const lastCameraFov = useRef(FOV_HERO)
 
   useLayoutEffect(() => {
     hasSetBoundsCenter.current = false
@@ -113,13 +79,14 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
     const minEdge = Math.min(width, height)
     const scaleMul =
       minEdge < 300 ? 0.74 : minEdge < 360 ? 0.8 : minEdge < 440 ? 0.88 : minEdge < 560 ? 0.94 : minEdge < 680 ? 0.98 : 1
-    if (responsiveScaleRef.current) {
+    if (responsiveScaleRef.current && lastScaleMul.current !== scaleMul) {
       responsiveScaleRef.current.scale.setScalar(scaleMul)
+      lastScaleMul.current = scaleMul
     }
     const fovBoost = aspect < 0.48 ? 14 : aspect < 0.55 ? 10 : aspect < 0.64 ? 6 : aspect < 0.76 ? 3 : 0
 
     if (!hasSetBoundsCenter.current && modelRef.current) {
-      const box = new Box3().setFromObject(modelRef.current)
+      const box = boundsBox.current.setFromObject(modelRef.current)
       if (!box.isEmpty()) {
         box.getCenter(vCenter.current)
         hasSetBoundsCenter.current = true
@@ -188,8 +155,12 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
 
     cameraref.current.position.copy(vStoryPos.current)
     cameraref.current.lookAt(vLook.current)
-    cameraref.current.fov = storyFov + fovBoost
-    cameraref.current.updateProjectionMatrix()
+    const nextFov = storyFov + fovBoost
+    if (Math.abs(lastCameraFov.current - nextFov) > 0.01) {
+      cameraref.current.fov = nextFov
+      cameraref.current.updateProjectionMatrix()
+      lastCameraFov.current = nextFov
+    }
   })
 
   return (
@@ -211,7 +182,6 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
       <Center>
         <group ref={responsiveScaleRef}>
           <Carpet
-            key={storyCarpetDesign}
             ref={modelRef}
             design={storyCarpetDesign}
             progress={0}
@@ -223,9 +193,6 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
         </group>
       </Center>
       <OrbitControls enabled={false} />
-      {anchorScreenRef ? (
-        <StoryAnchors displayRef={displayRef} foamRef={foamRef} anchorScreenRef={anchorScreenRef} />
-      ) : null}
     </>
   )
 }
