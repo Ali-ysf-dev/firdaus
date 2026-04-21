@@ -43,7 +43,7 @@ function ScreenRotationIcon({ className }) {
 /**
  * Full-screen welcome until the hero 3D scene is ready and (on narrow portrait) the device is in landscape.
  */
-export default function WelcomeIntro({ reveal, blockPortrait, modelReady }) {
+export default function WelcomeIntro({ reveal, blockPortrait }) {
   const panelRef = useRef(null);
   const [mounted, setMounted] = useState(true);
 
@@ -143,20 +143,8 @@ export default function WelcomeIntro({ reveal, blockPortrait, modelReady }) {
             <div className="welcome-rotate-phone mt-10 text-zinc-300">
               <ScreenRotationIcon className="mx-auto h-28 w-28 sm:h-32 sm:w-32" />
             </div>
-            <p className="mt-8 text-balance text-base font-medium leading-snug text-zinc-100 sm:text-lg">
-              Rotate your phone to landscape to continue.
-            </p>
-            {!modelReady ? (
-              <p className="mt-3 text-balance text-sm text-zinc-500">Preparing the 3D scene in the background…</p>
-            ) : (
-              <p className="mt-3 text-balance text-sm text-zinc-500">You are all set—switch to landscape to enter.</p>
-            )}
           </>
-        ) : (
-          <p className="mt-8 text-balance text-base leading-relaxed text-zinc-200 sm:text-lg">
-            Welcome to Firdaus—setting up your scene.
-          </p>
-        )}
+        ) : null}
       </div>
     </div>
   );

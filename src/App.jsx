@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import "./App.css";
 import Header from "./components/Header";
-import WelcomeIntro from "./components/WelcomeIntro.jsx";
 import Footer from "./components/Footer";
 import HeroSection from "./components/HeroSection";
 import FeatureSection from "./components/FeatureSection";
@@ -10,7 +9,6 @@ import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
 import { MODEL_TEXTURE_2_URL, MODEL_TEXTURE_3_URL } from "./modelConstants.js";
 import { featureSections } from "./data/sections.jsx";
 import { heroColumnMetrics } from "./heroStoryScroll.js";
-import { useMobilePortraitGate } from "./hooks/useMobilePortraitGate.js";
 
 function App() {
   const mainref = useRef(null);
@@ -221,86 +219,68 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
   }, [modelReady, gsapLibsReady]);
 
-  const blockPortraitRaw = useMobilePortraitGate();
-  /** Debounce avoids rapid portrait/landscape edge flicker that can thrash `position:fixed` scroll-lock on iOS. */
-  const [blockPortraitMobile, setBlockPortraitMobile] = useState(blockPortraitRaw);
-  useEffect(() => {
-    const id = window.setTimeout(() => setBlockPortraitMobile(blockPortraitRaw), 180);
-    return () => window.clearTimeout(id);
-  }, [blockPortraitRaw]);
-
-  const appReadyToShow = modelReady && !blockPortraitMobile;
-
   return (
     <main
       id="top"
       ref={mainref}
       className="overflow-x-hidden bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-100"
     >
-      <WelcomeIntro reveal={appReadyToShow} blockPortrait={blockPortraitMobile} modelReady={modelReady} />
+      <Header />
 
-      <div
-        inert={!appReadyToShow}
-        aria-hidden={!appReadyToShow}
-        className={!appReadyToShow ? "pointer-events-none select-none" : undefined}
-      >
-        {appReadyToShow ? <Header /> : null}
+      <HeroSection
+        sceneRef={sceneRef}
+        storyProgressRef={storyProgressRef}
+        heroShellLayoutSyncRef={heroShellLayoutSyncRef}
+        freezeHeroShellShift={false}
+        hideFixedHeroScene={hideFixedHeroScene}
+        heroSceneShellStyle={heroSceneShellStyle}
+        onModelLoad={onHeroModelLoad}
+        contentRef={heroContentRef}
+        heroCalloutRef={heroCalloutRef}
+        anchorScreenRef={anchorScreenRef}
+        storyCarpetDesign={storyCarpetDesign}
+        storyDesignGlitchToken={storyDesignGlitchToken}
+      />
 
-        <HeroSection
-          sceneRef={sceneRef}
-          storyProgressRef={storyProgressRef}
-          heroShellLayoutSyncRef={heroShellLayoutSyncRef}
-          freezeHeroShellShift={false}
-          hideFixedHeroScene={hideFixedHeroScene}
-          heroSceneShellStyle={heroSceneShellStyle}
-          onModelLoad={onHeroModelLoad}
-          contentRef={heroContentRef}
-          heroCalloutRef={heroCalloutRef}
-          anchorScreenRef={anchorScreenRef}
-          storyCarpetDesign={storyCarpetDesign}
-          storyDesignGlitchToken={storyDesignGlitchToken}
-        />
+      <div className="relative z-0">
+        {featureSections.map((section, i) => (
+          <FeatureSection
+            key={section.id}
+            id={section.id}
+            sectionRef={section.id === "presence" ? presenceSectionRef : undefined}
+            storyScrollEndRef={section.id === "presence" ? presenceStoryMidRef : undefined}
+            contentRef={featureContentRefs[i]}
+            contentOnLeft={section.contentOnLeft}
+            label={section.label}
+            title={section.title}
+            description={section.description}
+            features={section.features}
+            customContent={
+              section.id === "presence" ? (
+                <div className="grid gap-6 pt-4">
+                  <CarpetDesignPicker
+                    variant="chapter"
+                    value={storyCarpetDesign}
+                    onChange={onStoryCarpetDesignChange}
+                  />
+                  <Link
+                    to="/viewer"
+                    className="inline-flex w-fit items-center gap-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
+                  >
+                    Open 3D viewer
+                    <span aria-hidden>→</span>
+                  </Link>
+                </div>
+              ) : (
+                section.customContent
+              )
+            }
+          />
+        ))}
+      </div>
 
-        <div className="relative z-0">
-          {featureSections.map((section, i) => (
-            <FeatureSection
-              key={section.id}
-              id={section.id}
-              sectionRef={section.id === "presence" ? presenceSectionRef : undefined}
-              storyScrollEndRef={section.id === "presence" ? presenceStoryMidRef : undefined}
-              contentRef={featureContentRefs[i]}
-              contentOnLeft={section.contentOnLeft}
-              label={section.label}
-              title={section.title}
-              description={section.description}
-              features={section.features}
-              customContent={
-                section.id === "presence" ? (
-                  <div className="grid gap-6 pt-4">
-                    <CarpetDesignPicker
-                      variant="chapter"
-                      value={storyCarpetDesign}
-                      onChange={onStoryCarpetDesignChange}
-                    />
-                    <Link
-                      to="/viewer"
-                      className="inline-flex w-fit items-center gap-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
-                    >
-                      Open 3D viewer
-                      <span aria-hidden>→</span>
-                    </Link>
-                  </div>
-                ) : (
-                  section.customContent
-                )
-              }
-            />
-          ))}
-        </div>
-
-        <div className="relative z-[50] isolate w-full bg-zinc-950">
-          <Footer />
-        </div>
+      <div className="relative z-[50] isolate w-full bg-zinc-950">
+        <Footer />
       </div>
     </main>
   );
