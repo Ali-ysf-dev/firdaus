@@ -7,7 +7,7 @@ import HeroSection from "./components/HeroSection";
 import WelcomeIntro from "./components/WelcomeIntro.jsx";
 import FeatureSection from "./components/FeatureSection";
 import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
-import { MODEL_TEXTURE_2_URL, MODEL_TEXTURE_3_URL } from "./modelConstants.js";
+import { MODEL_URL, getDracoDecoderPath } from "./modelConstants.js";
 import { featureSections } from "./data/sections.jsx";
 import { heroColumnMetrics } from "./heroStoryScroll.js";
 
@@ -87,17 +87,17 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!modelReady) return;
     let cancelled = false;
     import("@react-three/drei").then(({ useGLTF }) => {
       if (cancelled) return;
-      useGLTF.preload(MODEL_TEXTURE_2_URL, true, false);
-      useGLTF.preload(MODEL_TEXTURE_3_URL, true, false);
+      /** Preload only the primary hero model once; alternates decode on first actual use. */
+      useGLTF.setDecoderPath(getDracoDecoderPath());
+      useGLTF.preload(MODEL_URL, true, false);
     });
     return () => {
       cancelled = true;
     };
-  }, [modelReady]);
+  }, []);
 
   const onStoryCarpetDesignChange = useCallback((id) => {
     if (id === storyCarpetDesignRef.current) return;
@@ -120,6 +120,12 @@ function App() {
       if (storyTickRafRef.current) cancelAnimationFrame(storyTickRafRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (modelReady) return;
+    const fallback = window.setTimeout(() => setModelReady(true), 6000);
+    return () => window.clearTimeout(fallback);
+  }, [modelReady]);
 
   /** Keep the fixed story canvas visible (no fade/hide at chapter end or over the Presence section). */
   const hideFixedHeroScene = false;
