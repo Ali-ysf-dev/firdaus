@@ -65,6 +65,8 @@ function App() {
   const storyGsapCtxRef = useRef(null);
   const modelReadyTimeoutRef = useRef(0);
   const hasMarkedModelReadyRef = useRef(false);
+  const pendingStoryProgressRef = useRef(0);
+  const storyTickRafRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,6 +117,7 @@ function App() {
   useEffect(() => {
     return () => {
       if (modelReadyTimeoutRef.current) window.clearTimeout(modelReadyTimeoutRef.current);
+      if (storyTickRafRef.current) cancelAnimationFrame(storyTickRafRef.current);
     };
   }, []);
 
@@ -154,14 +157,21 @@ function App() {
           start: "top top",
           endTrigger: endEl,
           end: "center center",
-          /** `true` ties progress 1:1 to scroll for constant-speed motion (no scrub catch-up lag). */
-          scrub: true,
+          /** Slight smoothing prevents fast-wheel bursts from overloading update callbacks. */
+          scrub: 0.2,
+          fastScrollEnd: true,
           onUpdate: (self) => {
             const v = Math.min(1, Math.max(0, self.progress));
-            if (Math.abs(v - storyProgressRef.current) < 0.0005) return;
-            storyProgressRef.current = v;
-            heroShellLayoutSyncRef.current();
-            requestHeroFrameRef.current();
+            pendingStoryProgressRef.current = v;
+            if (storyTickRafRef.current) return;
+            storyTickRafRef.current = requestAnimationFrame(() => {
+              storyTickRafRef.current = 0;
+              const next = pendingStoryProgressRef.current;
+              if (Math.abs(next - storyProgressRef.current) < 0.0005) return;
+              storyProgressRef.current = next;
+              heroShellLayoutSyncRef.current();
+              requestHeroFrameRef.current();
+            });
           },
         });
         requestAnimationFrame(() => ScrollTrigger.refresh());
@@ -173,6 +183,10 @@ function App() {
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
+      if (storyTickRafRef.current) {
+        cancelAnimationFrame(storyTickRafRef.current);
+        storyTickRafRef.current = 0;
+      }
       storyTriggerRef.current?.kill();
       storyTriggerRef.current = null;
       storyGsapCtxRef.current?.revert();
