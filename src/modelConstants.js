@@ -1,9 +1,9 @@
 /** Primary hero + viewer GLB (shared so decode/cache can warm once). */
-export const MODEL_URL = "/webmodel-v2.glb";
+export const MODEL_URL = "/model1.glb";
 
 /** Alternate carpet designs (lazy-loaded in the viewer only). */
-export const MODEL_TEXTURE_2_URL = "/model-texture-2.glb";
-export const MODEL_TEXTURE_3_URL = "/model-texture-3.glb";
+export const MODEL_TEXTURE_2_URL = "/model2.glb";
+export const MODEL_TEXTURE_3_URL = "/model3.glb";
 
 /**
  * Draco decoders live in `public/draco/` (from `three/examples/jsm/libs/draco/gltf`).

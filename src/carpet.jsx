@@ -11,6 +11,7 @@ import {
   getDracoDecoderPath,
 } from "./modelConstants.js";
 
+/** Source GLBs are already authored at the correct world size. */
 const MODEL_ROOT_SCALE = 0.1;
 
 let dracoDecoderPathSet = false;
