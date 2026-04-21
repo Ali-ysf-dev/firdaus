@@ -61,6 +61,10 @@ function App() {
   const [gsapLibsReady, setGsapLibsReady] = useState(false);
   const gsapRef = useRef(null);
   const scrollTriggerRef = useRef(null);
+  const storyTriggerRef = useRef(null);
+  const storyGsapCtxRef = useRef(null);
+  const modelReadyTimeoutRef = useRef(0);
+  const hasMarkedModelReadyRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,7 +106,16 @@ function App() {
 
   /** Stable for `Carpet` — inline lambdas retrigger `useEffect` every render and can stress mobile Safari. */
   const onHeroModelLoad = useCallback(() => {
-    window.setTimeout(() => setModelReady(true), 500);
+    if (hasMarkedModelReadyRef.current) return;
+    hasMarkedModelReadyRef.current = true;
+    if (modelReadyTimeoutRef.current) window.clearTimeout(modelReadyTimeoutRef.current);
+    modelReadyTimeoutRef.current = window.setTimeout(() => setModelReady(true), 250);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (modelReadyTimeoutRef.current) window.clearTimeout(modelReadyTimeoutRef.current);
+    };
   }, []);
 
   /** Keep the fixed story canvas visible (no fade/hide at chapter end or over the Presence section). */
@@ -115,8 +128,6 @@ function App() {
     const gsap = gsapRef.current;
     const ScrollTrigger = scrollTriggerRef.current;
 
-    let st;
-    let ctx;
     let cancelled = false;
     let raf = 0;
     let attempts = 0;
@@ -131,9 +142,14 @@ function App() {
         return;
       }
 
-      ctx = gsap.context(() => {
+      storyTriggerRef.current?.kill();
+      storyGsapCtxRef.current?.revert();
+      ScrollTrigger.getById("hero-story-progress")?.kill();
+
+      storyGsapCtxRef.current = gsap.context(() => {
         gsap.set(sceneRef.current, { x: 0, y: 0 });
-        st = ScrollTrigger.create({
+        storyTriggerRef.current = ScrollTrigger.create({
+          id: "hero-story-progress",
           trigger: mainref.current,
           start: "top top",
           endTrigger: endEl,
@@ -142,6 +158,7 @@ function App() {
           scrub: true,
           onUpdate: (self) => {
             const v = Math.min(1, Math.max(0, self.progress));
+            if (Math.abs(v - storyProgressRef.current) < 0.0005) return;
             storyProgressRef.current = v;
             heroShellLayoutSyncRef.current();
             requestHeroFrameRef.current();
@@ -156,8 +173,10 @@ function App() {
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
-      st?.kill();
-      ctx?.revert();
+      storyTriggerRef.current?.kill();
+      storyTriggerRef.current = null;
+      storyGsapCtxRef.current?.revert();
+      storyGsapCtxRef.current = null;
     };
   }, [gsapLibsReady]);
 

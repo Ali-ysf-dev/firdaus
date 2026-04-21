@@ -37,7 +37,7 @@ export default function HeroR3FIsland({
       className="h-full w-full touch-pan-y"
       dpr={dpr}
       gl={glConfig}
-      frameloop={hideFixedHeroScene ? "never" : "always"}
+      frameloop={hideFixedHeroScene ? "never" : "demand"}
       flat
       linear
       resize={{ debounce: { scroll: 50, resize: 120 } }}

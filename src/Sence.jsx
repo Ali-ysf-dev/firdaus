@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useFrame } from '@react-three/fiber'
-import { PerspectiveCamera, OrbitControls, Center } from '@react-three/drei'
+import { PerspectiveCamera, Center } from '@react-three/drei'
 import { MathUtils, Vector3 } from 'three'
 import { Carpet } from './carpet.jsx'
 import {
@@ -40,7 +40,6 @@ function storyCameraWorld(progress, vCenter, outPos) {
 
 function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' }) {
   const cameraref = useRef(null)
-  const controlsRef = useRef(null)
   const modelRef = useRef(null)
   const responsiveScaleRef = useRef(null)
   const displayRef = useRef(null)
@@ -53,18 +52,6 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
   const vStoryPos = useRef(new Vector3())
   const lastScaleMul = useRef(1)
   const lastCameraFov = useRef(FOV_HERO)
-  const lastLoggedScroll = useRef(-1)
-  const manualOrbitActive = useRef(false)
-
-  function handleOrbitChange() {
-    if (!cameraref.current) return
-    const [x, y, z] = cameraref.current.position.toArray()
-    console.log('[camera position]', { x, y, z })
-  }
-
-  function handleOrbitStart() {
-    manualOrbitActive.current = true
-  }
 
   useFrame((state) => {
     if (!cameraref.current) return
@@ -81,11 +68,6 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
     const fovBoost = aspect < 0.48 ? 14 : aspect < 0.55 ? 10 : aspect < 0.64 ? 6 : aspect < 0.76 ? 3 : 0
 
     const p = Math.min(1, Math.max(0, storyProgressRef?.current ?? 0))
-    if (Math.abs(p - lastLoggedScroll.current) > 0.002) {
-      console.log('[scroll progress]', p)
-      lastLoggedScroll.current = p
-    }
-    if (manualOrbitActive.current) return
     const pStory = p
     const u0 = segmentLocal(pStory, 0)
     const u1 = segmentLocal(pStory, 1)
@@ -169,16 +151,6 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
           />
         </group>
       </Center>
-      <OrbitControls
-        ref={controlsRef}
-        makeDefault
-        enabled={false}
-        enableRotate
-        enableZoom
-        enablePan
-        onStart={handleOrbitStart}
-        onChange={handleOrbitChange}
-      />
     </>
   )
 }
