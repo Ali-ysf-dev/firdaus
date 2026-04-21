@@ -14,11 +14,3 @@ export function getDracoDecoderPath() {
   const normalized = base.endsWith("/") ? base : `${base}/`;
   return `${normalized}draco/`;
 }
-
-/*
-  FPS / draw-call hygiene:
-  - Merge static meshes + materials in DCC / gltfpack where possible.
-  - Prefer Draco on geometry; atlas textures to cut material batches.
-  - Turn off cast/receive shadow where no shadow map is used (hero story).
-  - Profile ContactShadows + env resolution on low-end phones; reduce or disable if GPU-bound.
-*/

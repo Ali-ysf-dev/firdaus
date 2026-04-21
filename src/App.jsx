@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
-import { useGLTF } from "@react-three/drei";
 import "./App.css";
 import Header from "./components/Header";
 import WelcomeIntro from "./components/WelcomeIntro.jsx";
 import Footer from "./components/Footer";
 import HeroSection from "./components/HeroSection";
 import FeatureSection from "./components/FeatureSection";
-import StoryCallouts from "./components/StoryCallouts";
 import SceneLoadFallback from "./components/SceneLoadFallback.jsx";
 import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
 import { MODEL_TEXTURE_2_URL, MODEL_TEXTURE_3_URL } from "./modelConstants.js";
@@ -123,8 +121,15 @@ function App() {
 
   useEffect(() => {
     if (!modelReady) return;
-    useGLTF.preload(MODEL_TEXTURE_2_URL, true, false);
-    useGLTF.preload(MODEL_TEXTURE_3_URL, true, false);
+    let cancelled = false;
+    import("@react-three/drei").then(({ useGLTF }) => {
+      if (cancelled) return;
+      useGLTF.preload(MODEL_TEXTURE_2_URL, true, false);
+      useGLTF.preload(MODEL_TEXTURE_3_URL, true, false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [modelReady]);
 
   const onStoryCarpetDesignChange = useCallback((id) => {
@@ -132,6 +137,11 @@ function App() {
     storyCarpetDesignRef.current = id;
     setStoryCarpetDesign(id);
     setStoryDesignGlitchToken((t) => t + 1);
+  }, []);
+
+  /** Stable for `Carpet` — inline lambdas retrigger `useEffect` every render and can stress mobile Safari. */
+  const onHeroModelLoad = useCallback(() => {
+    window.setTimeout(() => setModelReady(true), 500);
   }, []);
 
   /** Keep the fixed story canvas visible (no fade/hide at chapter end or over the Presence section). */
@@ -240,7 +250,7 @@ function App() {
               end: "top 30%",
               toggleActions: "play none none none",
             },
-          }
+          },
         );
       });
     }, mainref);
@@ -249,11 +259,19 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
   }, [modelReady, gsapLibsReady]);
 
-  const blockPortraitMobile = useMobilePortraitGate();
+  const blockPortraitRaw = useMobilePortraitGate();
+  /** Debounce avoids rapid portrait/landscape edge flicker that can thrash `position:fixed` scroll-lock on iOS. */
+  const [blockPortraitMobile, setBlockPortraitMobile] = useState(blockPortraitRaw);
+  useEffect(() => {
+    const id = window.setTimeout(() => setBlockPortraitMobile(blockPortraitRaw), 180);
+    return () => window.clearTimeout(id);
+  }, [blockPortraitRaw]);
+
   const appReadyToShow = modelReady && !blockPortraitMobile;
 
   return (
     <main
+      id="top"
       ref={mainref}
       className="overflow-x-hidden bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-100"
     >
@@ -266,14 +284,6 @@ function App() {
       >
         {appReadyToShow ? <Header /> : null}
 
-        <StoryCallouts
-          anchorScreenRef={anchorScreenRef}
-          heroCalloutRef={heroCalloutRef}
-          surfaceCardRef={surfaceContentRef}
-          foundationCardRef={foundationContentRef}
-          presenceCardRef={presenceContentRef}
-        />
-
         <HeroSection
           sceneRef={sceneRef}
           storyProgressRef={storyProgressRef}
@@ -281,7 +291,7 @@ function App() {
           freezeHeroShellShift={freezeHeroShellShift}
           hideFixedHeroScene={hideFixedHeroScene}
           heroSceneShellStyle={heroSceneShellStyle}
-          onModelLoad={() => setTimeout(() => setModelReady(true), 500)}
+          onModelLoad={onHeroModelLoad}
           contentRef={heroContentRef}
           heroCalloutRef={heroCalloutRef}
           anchorScreenRef={anchorScreenRef}
@@ -290,48 +300,40 @@ function App() {
         />
 
         <div className="relative z-0">
-          <Suspense
-            fallback={
-              <div className="fixed inset-0 z-[100] grid place-items-center bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-300">
-                Loading…
-              </div>
-            }
-          >
-            {featureSections.map((section, i) => (
-              <FeatureSection
-                key={section.id}
-                id={section.id}
-                sectionRef={section.id === "presence" ? presenceSectionRef : undefined}
-                storyScrollEndRef={section.id === "presence" ? presenceStoryMidRef : undefined}
-                contentRef={featureContentRefs[i]}
-                contentOnLeft={section.contentOnLeft}
-                label={section.label}
-                title={section.title}
-                description={section.description}
-                features={section.features}
-                customContent={
-                  section.id === "presence" ? (
-                    <div className="grid gap-6 pt-4">
-                      <CarpetDesignPicker
-                        variant="chapter"
-                        value={storyCarpetDesign}
-                        onChange={onStoryCarpetDesignChange}
-                      />
-                      <a
-                        href="#viewer"
-                        className="inline-flex w-fit items-center gap-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
-                      >
-                        Open 3D viewer
-                        <span aria-hidden>→</span>
-                      </a>
-                    </div>
-                  ) : (
-                    section.customContent
-                  )
-                }
-              />
-            ))}
-          </Suspense>
+          {featureSections.map((section, i) => (
+            <FeatureSection
+              key={section.id}
+              id={section.id}
+              sectionRef={section.id === "presence" ? presenceSectionRef : undefined}
+              storyScrollEndRef={section.id === "presence" ? presenceStoryMidRef : undefined}
+              contentRef={featureContentRefs[i]}
+              contentOnLeft={section.contentOnLeft}
+              label={section.label}
+              title={section.title}
+              description={section.description}
+              features={section.features}
+              customContent={
+                section.id === "presence" ? (
+                  <div className="grid gap-6 pt-4">
+                    <CarpetDesignPicker
+                      variant="chapter"
+                      value={storyCarpetDesign}
+                      onChange={onStoryCarpetDesignChange}
+                    />
+                    <a
+                      href="#viewer"
+                      className="inline-flex w-fit items-center gap-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
+                    >
+                      Open 3D viewer
+                      <span aria-hidden>→</span>
+                    </a>
+                  </div>
+                ) : (
+                  section.customContent
+                )
+              }
+            />
+          ))}
         </div>
 
         <div className="relative z-[50] isolate w-full bg-zinc-950">

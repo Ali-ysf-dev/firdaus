@@ -28,8 +28,8 @@ function getSnapshot() {
   let max = 1.75;
   /** Tighter cap on narrow viewports reduces VRAM pressure (two WebGL canvases on this page). */
   if (w < 400) max = 1;
-  else if (w < 640) max = 1.1;
-  else if (w < 900) max = 1.25;
+  else if (w < 640) max = 1;
+  else if (w < 900) max = 1.15;
   else if (w < 1200) max = 1.5;
   const hi = Math.min(max, dpr);
   if (clientDprCache && clientDprCache[0] === 1 && clientDprCache[1] === hi) {

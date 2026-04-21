@@ -1,7 +1,7 @@
-import React, { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from "react";
 import { useFrame, useThree } from '@react-three/fiber'
 import { PerspectiveCamera, OrbitControls, Center } from '@react-three/drei'
-import * as THREE from 'three'
+import { Box3, MathUtils, Vector3 } from 'three'
 import { Carpet } from './carpet.jsx'
 
 const SEGMENT = 1 / 3
@@ -50,8 +50,8 @@ function storyCameraWorld(progress, vCenter, outPos) {
 
 function StoryAnchors({ displayRef, foamRef, anchorScreenRef }) {
   const { camera, gl } = useThree()
-  const v = useRef(new THREE.Vector3())
-  const vp = useRef(new THREE.Vector3())
+  const v = useRef(new Vector3())
+  const vp = useRef(new Vector3())
 
   useFrame(() => {
     if (!anchorScreenRef) return
@@ -68,7 +68,7 @@ function StoryAnchors({ displayRef, foamRef, anchorScreenRef }) {
     }
 
     const out = { display: null, foam: null, center: null }
-    out.center = project(new THREE.Vector3(0, 0, 0))
+    out.center = project(new Vector3(0, 0, 0))
 
     if (displayRef.current) {
       displayRef.current.getWorldPosition(v.current)
@@ -91,14 +91,14 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
   const responsiveScaleRef = useRef(null)
   const displayRef = useRef(null)
   const foamRef = useRef(null)
-  const vCenter = useRef(new THREE.Vector3(0, 0, 0))
-  const vDispCarpet = useRef(new THREE.Vector3())
-  const vFoamProfile = useRef(new THREE.Vector3())
-  const vFoamBlend = useRef(new THREE.Vector3())
-  const vLook = useRef(new THREE.Vector3())
-  const vStoryPos = useRef(new THREE.Vector3())
-  const vCamSurfHold = useRef(new THREE.Vector3())
-  const vCamSurfEnd = useRef(new THREE.Vector3())
+  const vCenter = useRef(new Vector3(0, 0, 0))
+  const vDispCarpet = useRef(new Vector3())
+  const vFoamProfile = useRef(new Vector3())
+  const vFoamBlend = useRef(new Vector3())
+  const vLook = useRef(new Vector3())
+  const vStoryPos = useRef(new Vector3())
+  const vCamSurfHold = useRef(new Vector3())
+  const vCamSurfEnd = useRef(new Vector3())
   const hasSetBoundsCenter = useRef(false)
 
   useLayoutEffect(() => {
@@ -119,7 +119,7 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
     const fovBoost = aspect < 0.48 ? 14 : aspect < 0.55 ? 10 : aspect < 0.64 ? 6 : aspect < 0.76 ? 3 : 0
 
     if (!hasSetBoundsCenter.current && modelRef.current) {
-      const box = new THREE.Box3().setFromObject(modelRef.current)
+      const box = new Box3().setFromObject(modelRef.current)
       if (!box.isEmpty()) {
         box.getCenter(vCenter.current)
         hasSetBoundsCenter.current = true
@@ -165,11 +165,11 @@ function Sence({ storyProgressRef, onModelLoad, anchorScreenRef, storyCarpetDesi
 
     let storyFov = FOV_HERO
     if (pStory < SEGMENT) {
-      storyFov = THREE.MathUtils.lerp(FOV_HERO, FOV_DISPLAY_DETAIL, u0)
+      storyFov = MathUtils.lerp(FOV_HERO, FOV_DISPLAY_DETAIL, u0)
     } else if (pStory < 2 * SEGMENT) {
-      storyFov = THREE.MathUtils.lerp(FOV_DISPLAY_DETAIL, FOV_DURABILITY, u1)
+      storyFov = MathUtils.lerp(FOV_DISPLAY_DETAIL, FOV_DURABILITY, u1)
     } else {
-      storyFov = THREE.MathUtils.lerp(FOV_DURABILITY, FOV_HERO, u2)
+      storyFov = MathUtils.lerp(FOV_DURABILITY, FOV_HERO, u2)
     }
 
     /** Chapter 1 (Surface): same camera position as hero end; then blend into scroll path. */

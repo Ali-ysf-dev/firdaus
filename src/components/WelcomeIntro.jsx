@@ -47,6 +47,11 @@ export default function WelcomeIntro({ reveal, blockPortrait, modelReady }) {
   const panelRef = useRef(null);
   const [mounted, setMounted] = useState(true);
 
+  /** When the app hides again (e.g. portrait gate), allow the overlay to remount cleanly. */
+  useEffect(() => {
+    if (!reveal) setMounted(true);
+  }, [reveal]);
+
   useEffect(() => {
     if (!reveal) return;
     const panel = panelRef.current;

@@ -1,9 +1,8 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { Canvas } from "@react-three/fiber";
 import { storyCanvasShiftXPx } from "../heroStoryScroll.js";
 import { useAdaptiveDpr } from "../hooks/useAdaptiveDpr.js";
 
-const Sence = lazy(() => import("../Sence.jsx"));
+const HeroR3FIsland = lazy(() => import("./HeroR3FIsland.jsx"));
 
 function HeroSection({
   sceneRef,
@@ -42,17 +41,19 @@ function HeroSection({
     }
   }, [freezeHeroShellShift]);
 
-  const glConfig = useMemo(
-    () => ({
+  const glConfig = useMemo(() => {
+    const narrowMobile =
+      typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+    return {
       antialias: dpr[1] <= 1.35,
       alpha: true,
       depth: true,
       stencil: false,
       preserveDrawingBuffer: false,
-      powerPreference: "high-performance",
-    }),
-    [dpr],
-  );
+      /** `default` avoids unstable discrete-GPU selection on phones (reduces tab crashes with dual canvases). */
+      powerPreference: narrowMobile ? "default" : "high-performance",
+    };
+  }, [dpr]);
 
   useLayoutEffect(() => {
     const el = heroShellRef.current;
@@ -165,25 +166,25 @@ function HeroSection({
             ref={heroGlitchHostRef}
             className="hero-glitch-host viewer-glitch-host relative isolate h-full min-h-0 w-full min-w-0"
           >
-            <Canvas
-              className="h-full w-full touch-pan-y"
-              dpr={dpr}
-              gl={glConfig}
-              frameloop={hideFixedHeroScene ? "never" : "always"}
-              flat
-              linear
-              resize={{ debounce: { scroll: 50, resize: 120 } }}
-              style={{ pointerEvents: hideFixedHeroScene ? "none" : "auto" }}
-            >
-              <Suspense fallback={null}>
-                <Sence
-                  storyProgressRef={storyProgressRef}
-                  onModelLoad={onModelLoad}
-                  anchorScreenRef={anchorScreenRef}
-                  storyCarpetDesign={storyCarpetDesign}
+            <Suspense
+              fallback={
+                <div
+                  className="h-full w-full animate-pulse bg-zinc-900/45"
+                  aria-busy="true"
+                  aria-label="Loading 3D scene"
                 />
-              </Suspense>
-            </Canvas>
+              }
+            >
+              <HeroR3FIsland
+                dpr={dpr}
+                glConfig={glConfig}
+                hideFixedHeroScene={hideFixedHeroScene}
+                storyProgressRef={storyProgressRef}
+                onModelLoad={onModelLoad}
+                anchorScreenRef={anchorScreenRef}
+                storyCarpetDesign={storyCarpetDesign}
+              />
+            </Suspense>
           </div>
         </div>
       </div>

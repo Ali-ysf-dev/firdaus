@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Lighthouse CLI output (large, regenerable)
+lighthouse-report.json
+lighthouse-report.before.json
+lighthouse-report*.json

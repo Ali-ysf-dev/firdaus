@@ -5,6 +5,20 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
+    /** Do not preload three/r3f/drei with the HTML shell — they load when the hero island imports (better mobile TBT). */
+    modulePreload: {
+      resolveDependencies(_filename, deps) {
+        return deps.filter(
+          (id) =>
+            !id.includes("/three-") &&
+            !id.includes("/r3f-") &&
+            !id.includes("/drei-") &&
+            !id.includes("/HeroR3FIsland-") &&
+            !id.includes("/ModelViewerSection-") &&
+            !id.includes("/carpet-"),
+        );
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {

@@ -5,9 +5,13 @@ function Footer() {
     <footer className="relative z-[50] w-full bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] sm:px-6">
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-6 md:flex-row">
         <a
-          href="#"
+          href="#top"
           className="shrink-0 bg-transparent opacity-95 transition hover:opacity-100"
           aria-label="Firdaus home"
+          onClick={(e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
         >
           <img
             src="/Firdaus_logo.avif"

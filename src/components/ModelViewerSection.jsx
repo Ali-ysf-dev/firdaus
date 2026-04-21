@@ -19,6 +19,7 @@ import {
 import { useAdaptiveDpr } from "../hooks/useAdaptiveDpr.js";
 import SceneLoadFallback from "./SceneLoadFallback.jsx";
 import CarpetDesignPicker from "./CarpetDesignPicker.jsx";
+import WebglContextLostGuard from "./WebglContextLostGuard.jsx";
 
 function ViewerCarpet({ design }) {
   return <Carpet design={design} shadowsEnabled={false} />;
@@ -68,6 +69,10 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
   const [viewerCarpetDesign, setViewerCarpetDesign] = useState("default");
   const [viewerDesignGlitchToken, setViewerDesignGlitchToken] = useState(0);
   const [viewerSectionVisible, setViewerSectionVisible] = useState(false);
+  /** Mount viewer WebGL only after the section is seen (or deep-link) so mobile does not run two heavy GLBs at once. */
+  const [viewerGlEverMounted, setViewerGlEverMounted] = useState(
+    () => typeof window !== "undefined" && window.location.hash === "#viewer",
+  );
   const viewerDesignRef = useRef("default");
   viewerDesignRef.current = viewerCarpetDesign;
 
@@ -80,17 +85,33 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
 
   const glitchWrapRef = useRef(null);
   const dpr = useAdaptiveDpr();
-  const glConfig = useMemo(
-    () => ({
+  const glConfig = useMemo(() => {
+    const narrowMobile =
+      typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+    return {
       antialias: dpr[1] <= 1.5,
       alpha: true,
       depth: true,
       stencil: false,
       preserveDrawingBuffer: false,
-      powerPreference: "high-performance",
-    }),
-    [dpr],
-  );
+      powerPreference: narrowMobile ? "default" : "high-performance",
+    };
+  }, [dpr]);
+
+  useEffect(() => {
+    if (viewerSectionVisible) setViewerGlEverMounted(true);
+  }, [viewerSectionVisible]);
+
+  useEffect(() => {
+    const onHash = () => {
+      if (window.location.hash === "#viewer") setViewerGlEverMounted(true);
+    };
+    window.addEventListener("hashchange", onHash);
+    onHash();
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  const showViewerCanvas = viewerGlEverMounted;
 
   useEffect(() => {
     let io;
@@ -170,35 +191,45 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
               ref={ref}
               className="aspect-[3/4] w-full min-h-[220px] min-[400px]:aspect-[4/5] min-[520px]:aspect-[16/10] md:aspect-[2/1]"
             >
-              <Canvas
-                dpr={dpr}
-                gl={glConfig}
-                frameloop={viewerSectionVisible ? "always" : "never"}
-                flat
-                linear
-                resize={{ debounce: { scroll: 50, resize: 120 } }}
-                camera={{
-                  position: [...VIEWER_CAMERA_POSITION],
-                  fov: VIEWER_CAMERA_FOV,
-                  near: 0.08,
-                  far: 100,
-                }}
-                className="h-full w-full touch-none"
-              >
-                <Suspense
-                  fallback={
-                    <Html center transform prepend zIndexRange={[100, 0]} style={{ pointerEvents: "none" }}>
-                      <SceneLoadFallback
-                        label="Loading model…"
-                        className="!min-h-0 min-w-[220px] rounded-xl border border-zinc-800/80 bg-zinc-950/95 px-6 py-8 shadow-xl backdrop-blur-sm"
-                      />
-                    </Html>
-                  }
+              {showViewerCanvas ? (
+                <Canvas
+                  dpr={dpr}
+                  gl={glConfig}
+                  frameloop={viewerSectionVisible ? "always" : "never"}
+                  flat
+                  linear
+                  resize={{ debounce: { scroll: 50, resize: 120 } }}
+                  camera={{
+                    position: [...VIEWER_CAMERA_POSITION],
+                    fov: VIEWER_CAMERA_FOV,
+                    near: 0.08,
+                    far: 100,
+                  }}
+                  className="h-full w-full touch-none"
                 >
-                  <ViewerPerspectiveFit />
-                  <ViewerScene design={viewerCarpetDesign} />
-                </Suspense>
-              </Canvas>
+                  <WebglContextLostGuard />
+                  <Suspense
+                    fallback={
+                      <Html center transform prepend zIndexRange={[100, 0]} style={{ pointerEvents: "none" }}>
+                        <SceneLoadFallback
+                          label="Loading model…"
+                          className="!min-h-0 min-w-[220px] rounded-xl border border-zinc-800/80 bg-zinc-950/95 px-6 py-8 shadow-xl backdrop-blur-sm"
+                        />
+                      </Html>
+                    }
+                  >
+                    <ViewerPerspectiveFit />
+                    <ViewerScene design={viewerCarpetDesign} />
+                  </Suspense>
+                </Canvas>
+              ) : (
+                <div className="grid h-full min-h-[220px] w-full place-items-center bg-zinc-900/50">
+                  <SceneLoadFallback
+                    label="Scroll to load the 3D viewer"
+                    className="max-w-xs rounded-xl border border-zinc-800/80 bg-zinc-950/90 px-5 py-6 text-center shadow-lg backdrop-blur-sm"
+                  />
+                </div>
+              )}
             </div>
           </div>
           <p className="px-4 py-3 text-center text-xs text-zinc-500">

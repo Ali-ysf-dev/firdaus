@@ -52,10 +52,14 @@ function Header() {
           className="relative flex w-full max-w-[calc(100vw-2rem)] items-center justify-between gap-3 bg-zinc-900/90 px-3 py-2 backdrop-blur-xl sm:max-w-none sm:px-6 md:justify-center md:gap-10 lg:gap-16 lg:px-10"
         >
           <a
-            href="#"
+            href="#top"
             className="flex shrink-0 items-center bg-transparent opacity-95 transition hover:opacity-100"
             aria-label="Firdaus home"
-            onClick={() => setMenuOpen(false)}
+            onClick={(e) => {
+              e.preventDefault();
+              setMenuOpen(false);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           >
             <img
               src="/Firdaus_logo.avif"
