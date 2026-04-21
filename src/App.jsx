@@ -1,18 +1,16 @@
-import { useState, useRef, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import "./App.css";
 import Header from "./components/Header";
 import WelcomeIntro from "./components/WelcomeIntro.jsx";
 import Footer from "./components/Footer";
 import HeroSection from "./components/HeroSection";
 import FeatureSection from "./components/FeatureSection";
-import SceneLoadFallback from "./components/SceneLoadFallback.jsx";
 import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
 import { MODEL_TEXTURE_2_URL, MODEL_TEXTURE_3_URL } from "./modelConstants.js";
 import { featureSections } from "./data/sections.jsx";
 import { heroColumnMetrics } from "./heroStoryScroll.js";
 import { useMobilePortraitGate } from "./hooks/useMobilePortraitGate.js";
-
-const ModelViewerSection = lazy(() => import("./components/ModelViewerSection.jsx"));
 
 function App() {
   const mainref = useRef(null);
@@ -61,9 +59,6 @@ function App() {
     };
   }, [viewport]);
 
-  /** When the viewer block is on screen, latch the hero shell shift so further downward scroll does not nudge the story canvas. */
-  const [freezeHeroShellShift, setFreezeHeroShellShift] = useState(false);
-
   const [gsapLibsReady, setGsapLibsReady] = useState(false);
   const gsapRef = useRef(null);
   const scrollTriggerRef = useRef(null);
@@ -83,39 +78,6 @@ function App() {
       .catch(() => {});
     return () => {
       cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let io;
-    let cancelled = false;
-    let raf = 0;
-    let attempts = 0;
-    const maxAttempts = 240;
-
-    const bind = () => {
-      if (cancelled) return;
-      const el = document.getElementById("viewer");
-      attempts += 1;
-      if (!el) {
-        if (attempts < maxAttempts) raf = requestAnimationFrame(bind);
-        return;
-      }
-      io = new IntersectionObserver(
-        ([e]) => {
-          const ratio = e?.intersectionRatio ?? 0;
-          setFreezeHeroShellShift(ratio > 0.04);
-        },
-        { root: null, rootMargin: "0px", threshold: [0, 0.04, 0.12, 0.25] },
-      );
-      io.observe(el);
-    };
-
-    raf = requestAnimationFrame(bind);
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(raf);
-      io?.disconnect();
     };
   }, []);
 
@@ -288,7 +250,7 @@ function App() {
           sceneRef={sceneRef}
           storyProgressRef={storyProgressRef}
           heroShellLayoutSyncRef={heroShellLayoutSyncRef}
-          freezeHeroShellShift={freezeHeroShellShift}
+          freezeHeroShellShift={false}
           hideFixedHeroScene={hideFixedHeroScene}
           heroSceneShellStyle={heroSceneShellStyle}
           onModelLoad={onHeroModelLoad}
@@ -320,13 +282,13 @@ function App() {
                       value={storyCarpetDesign}
                       onChange={onStoryCarpetDesignChange}
                     />
-                    <a
-                      href="#viewer"
+                    <Link
+                      to="/viewer"
                       className="inline-flex w-fit items-center gap-2 rounded-full bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-950 transition hover:bg-white"
                     >
                       Open 3D viewer
                       <span aria-hidden>→</span>
-                    </a>
+                    </Link>
                   </div>
                 ) : (
                   section.customContent
@@ -337,9 +299,6 @@ function App() {
         </div>
 
         <div className="relative z-[50] isolate w-full bg-zinc-950">
-          <Suspense fallback={<SceneLoadFallback label="Loading viewer…" className="min-h-[min(50dvh,28rem)]" />}>
-            <ModelViewerSection />
-          </Suspense>
           <Footer />
         </div>
       </div>

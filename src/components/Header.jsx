@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const NAV_LINKS = [
-  { href: "#surface", label: "Story" },
-  { href: "#foundation", label: "Foundation" },
-  { href: "#presence", label: "Presence" },
-  { href: "#viewer", label: "Viewer" },
+  { key: "surface", href: "#surface", label: "Story" },
+  { key: "foundation", href: "#foundation", label: "Foundation" },
+  { key: "presence", href: "#presence", label: "Presence" },
+  { key: "viewer", to: "/viewer", label: "Viewer" },
 ];
 
 function MenuIcon({ open }) {
@@ -89,24 +90,41 @@ function Header() {
               menuOpen ? "flex" : "hidden"
             }`}
           >
-            {NAV_LINKS.map(({ href, label }) => (
-              <a
-                key={href}
-                href={href}
-                className="rounded-lg px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800/80 hover:text-zinc-100"
-                onClick={() => setMenuOpen(false)}
-              >
-                {label}
-              </a>
-            ))}
+            {NAV_LINKS.map((item) =>
+              item.to ? (
+                <Link
+                  key={item.key}
+                  to={item.to}
+                  className="rounded-lg px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800/80 hover:text-zinc-100"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.key}
+                  href={item.href}
+                  className="rounded-lg px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800/80 hover:text-zinc-100"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ),
+            )}
           </nav>
 
           <nav className="hidden items-center gap-8 text-sm text-zinc-400 md:flex">
-            {NAV_LINKS.map(({ href, label }) => (
-              <a key={href} href={href} className="transition hover:text-zinc-100">
-                {label}
-              </a>
-            ))}
+            {NAV_LINKS.map((item) =>
+              item.to ? (
+                <Link key={item.key} to={item.to} className="transition hover:text-zinc-100">
+                  {item.label}
+                </Link>
+              ) : (
+                <a key={item.key} href={item.href} className="transition hover:text-zinc-100">
+                  {item.label}
+                </a>
+              ),
+            )}
           </nav>
         </header>
       </div>
