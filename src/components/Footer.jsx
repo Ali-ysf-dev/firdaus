@@ -24,7 +24,7 @@ function Footer() {
           />
         </a>
         <p className="text-center text-sm text-zinc-500 md:text-right">
-          © {year} Firdaus. Crafted for scroll storytelling and product clarity.
+          © {year} Firdaus. Designed and developed by ALI YOUSSEF.
         </p>
       </div>
     </footer>

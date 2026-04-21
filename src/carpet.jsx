@@ -8,18 +8,9 @@ import {
   MODEL_URL,
   MODEL_TEXTURE_2_URL,
   MODEL_TEXTURE_3_URL,
-  getDracoDecoderPath,
 } from "./modelConstants.js";
 
-/** Source GLBs are already authored at the correct world size. */
 const MODEL_ROOT_SCALE = 0.1;
-
-let dracoDecoderPathSet = false;
-function ensureDracoDecoderPath() {
-  if (dracoDecoderPathSet) return;
-  dracoDecoderPathSet = true;
-  useGLTF.setDecoderPath(getDracoDecoderPath());
-}
 
 function carpetModelUrl(design) {
   if (design === "texture2") return MODEL_TEXTURE_2_URL;
@@ -32,9 +23,8 @@ export const Carpet = React.forwardRef(function Carpet(
   { displayRef, foamRef, onModelReady, progress, shadowsEnabled = true, design = "default", ...props },
   ref,
 ) {
-  ensureDracoDecoderPath();
   const modelUrl = carpetModelUrl(design);
-  const { nodes, materials } = useGLTF(modelUrl, true, false);
+  const { nodes, materials } = useGLTF(modelUrl, false, false);
 
   useEffect(() => {
     onModelReady?.();
