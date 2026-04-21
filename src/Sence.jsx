@@ -3,35 +3,25 @@ import { useFrame } from '@react-three/fiber'
 import { PerspectiveCamera, OrbitControls, Center } from '@react-three/drei'
 import { Box3, MathUtils, Vector3 } from 'three'
 import { Carpet } from './carpet.jsx'
+import {
+  INITIAL_STORY_CAMERA,
+  STORY_CAMERA_KEYFRAMES,
+  STORY_FOV,
+  STORY_SEGMENT,
+} from "./storyCameraConfig.js";
 
-const SEGMENT = 1 / 3
-const FOV_HERO = 48
-const FOV_DISPLAY_DETAIL = 26
+const SEGMENT = STORY_SEGMENT
+const FOV_HERO = STORY_FOV.hero
+const FOV_DISPLAY_DETAIL = STORY_FOV.displayDetail
 /** Durability: wider than display detail so the full watch + carpet stay in frame */
-const FOV_DURABILITY = 42
+const FOV_DURABILITY = STORY_FOV.durability
 
-const CAM_KEYFRAMES = [
-  [0.013019456785087532, 0.1325220176781472, 2.167749760178603],
-  [0.012, 0.108, 0.26],
-  [2.35, 0.58, 2.28],
-  [0.013019456785087532, 0.1325220176781472, 2.167749760178603],
-]
-
-function smoothstep01(t) {
-  const x = Math.min(1, Math.max(0, t))
-  return x * x * (3 - 2 * x)
-}
+const CAM_KEYFRAMES = STORY_CAMERA_KEYFRAMES
 
 /** Scroll progress within current third, 0..1 */
 function segmentLocal(progress, index) {
-  return smoothstep01((progress - index * SEGMENT) / SEGMENT)
+  return Math.min(1, Math.max(0, (progress - index * SEGMENT) / SEGMENT))
 }
-
-/** App scroll: Surface chapter ≈ [0.25, 0.5). */
-const SURFACE_START = 0.25
-const SURFACE_END = 0.5
-/** After Surface, ease camera from hero-boundary rig into scroll-driven path (normalized story progress). */
-const SURFACE_BLEND_OUT = 0.055
 
 function storyCameraWorld(progress, vCenter, outPos) {
   const p = Math.min(1, progress)
@@ -42,7 +32,7 @@ function storyCameraWorld(progress, vCenter, outPos) {
   }
   const segmentProgress = SEGMENT
   const segmentindex = Math.min(2, Math.floor(p / segmentProgress))
-  const percentage = (p % segmentProgress) / segmentProgress
+  const percentage = Math.min(1, Math.max(0, (p - segmentindex * segmentProgress) / segmentProgress))
   const [sx, sy, sz] = position[segmentindex]
   const [ex, ey, ez] = position[segmentindex + 1]
   outPos.set(sx + (ex - sx) * percentage, sy + (ey - sy) * percentage, sz + (ez - sz) * percentage).add(vCenter)
@@ -50,6 +40,7 @@ function storyCameraWorld(progress, vCenter, outPos) {
 
 function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' }) {
   const cameraref = useRef(null)
+  const controlsRef = useRef(null)
   const modelRef = useRef(null)
   const responsiveScaleRef = useRef(null)
   const displayRef = useRef(null)
@@ -60,12 +51,22 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
   const vFoamBlend = useRef(new Vector3())
   const vLook = useRef(new Vector3())
   const vStoryPos = useRef(new Vector3())
-  const vCamSurfHold = useRef(new Vector3())
-  const vCamSurfEnd = useRef(new Vector3())
   const hasSetBoundsCenter = useRef(false)
   const boundsBox = useRef(new Box3())
   const lastScaleMul = useRef(1)
   const lastCameraFov = useRef(FOV_HERO)
+  const lastLoggedScroll = useRef(-1)
+  const manualOrbitActive = useRef(false)
+
+  function handleOrbitChange() {
+    if (!cameraref.current) return
+    const [x, y, z] = cameraref.current.position.toArray()
+    console.log('[camera position]', { x, y, z })
+  }
+
+  function handleOrbitStart() {
+    manualOrbitActive.current = true
+  }
 
   useLayoutEffect(() => {
     hasSetBoundsCenter.current = false
@@ -94,10 +95,12 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
     }
 
     const p = Math.min(1, Math.max(0, storyProgressRef?.current ?? 0))
-    const inSurface = p >= SURFACE_START && p < SURFACE_END
-    const inSurfaceBlendOut = p >= SURFACE_END && p < SURFACE_END + SURFACE_BLEND_OUT
-    /** During Surface (and a short blend after), keep look/FOV locked to the hero→Surface boundary. */
-    const pStory = inSurface || inSurfaceBlendOut ? SURFACE_START : p
+    if (Math.abs(p - lastLoggedScroll.current) > 0.002) {
+      console.log('[scroll progress]', p)
+      lastLoggedScroll.current = p
+    }
+    if (manualOrbitActive.current) return
+    const pStory = p
     const u0 = segmentLocal(pStory, 0)
     const u1 = segmentLocal(pStory, 1)
     const u2 = segmentLocal(pStory, 2)
@@ -139,19 +142,7 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
       storyFov = MathUtils.lerp(FOV_DURABILITY, FOV_HERO, u2)
     }
 
-    /** Chapter 1 (Surface): same camera position as hero end; then blend into scroll path. */
-    if (p < SURFACE_START) {
-      storyCameraWorld(p, vCenter.current, vStoryPos.current)
-    } else if (p < SURFACE_END) {
-      storyCameraWorld(SURFACE_START, vCenter.current, vStoryPos.current)
-    } else if (inSurfaceBlendOut) {
-      const t = smoothstep01((p - SURFACE_END) / SURFACE_BLEND_OUT)
-      storyCameraWorld(SURFACE_START, vCenter.current, vCamSurfHold.current)
-      storyCameraWorld(SURFACE_END, vCenter.current, vCamSurfEnd.current)
-      vStoryPos.current.lerpVectors(vCamSurfHold.current, vCamSurfEnd.current, t)
-    } else {
-      storyCameraWorld(p, vCenter.current, vStoryPos.current)
-    }
+    storyCameraWorld(p, vCenter.current, vStoryPos.current)
 
     cameraref.current.position.copy(vStoryPos.current)
     cameraref.current.lookAt(vLook.current)
@@ -169,9 +160,9 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
         ref={cameraref}
         makeDefault
         fov={FOV_HERO}
-        near={0.1}
-        far={1000}
-        position={[3.4821563489882656, 1.219071606362784, 5.929245271644066]}
+        near={INITIAL_STORY_CAMERA.near}
+        far={INITIAL_STORY_CAMERA.far}
+        position={INITIAL_STORY_CAMERA.position}
       />
       <ambientLight intensity={3.36} />
       <hemisphereLight args={['#ffffff', '#505058']} intensity={2.64} />
@@ -192,7 +183,16 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
           />
         </group>
       </Center>
-      <OrbitControls enabled={false} />
+      <OrbitControls
+        ref={controlsRef}
+        makeDefault
+        enabled={false}
+        enableRotate
+        enableZoom
+        enablePan
+        onStart={handleOrbitStart}
+        onChange={handleOrbitChange}
+      />
     </>
   )
 }

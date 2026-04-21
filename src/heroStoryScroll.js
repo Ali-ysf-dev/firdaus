@@ -45,11 +45,11 @@ export function storyCanvasShiftXPx(progress, w, h) {
   if (p < 0.25) {
     blended = 0;
   } else if (p < 0.5) {
-    blended = toLeft * smoothstep01((p - 0.25) / 0.25);
+    blended = toLeft * ((p - 0.25) / 0.25);
   } else if (p < 0.75) {
-    blended = (toRight - 0) * smoothstep01((p - 0.5) / 0.25);
+    blended = toLeft + (toRight - toLeft) * ((p - 0.5) / 0.25);
   } else {
-    blended = toRight + (toLeft - toRight) * smoothstep01((p - 0.75) / 0.25);
+    blended = toRight + (toLeft - toRight) * ((p - 0.75) / 0.25);
   }
 
   const aspect = w / Math.max(h, 1);

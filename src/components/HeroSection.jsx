@@ -115,7 +115,7 @@ function HeroSection({
 
   return (
     <section className="relative flex min-h-[100dvh] flex-col overflow-visible bg-transparent max-md:landscape:min-h-0 max-md:landscape:flex-row max-md:landscape:items-stretch max-md:landscape:gap-4 max-md:landscape:px-5 max-md:landscape:py-4 md:h-screen md:flex-row">
-      <div ref={contentRef} className="flex min-h-0 flex-1 flex-col md:contents">
+      <div ref={contentRef} className="pointer-events-none flex min-h-0 flex-1 flex-col md:contents">
         <div className="relative z-[42] flex flex-none flex-col justify-start px-4 pb-3 pt-5 sm:px-6 sm:pt-8 max-md:landscape:flex-1 max-md:landscape:justify-center max-md:landscape:px-0 max-md:landscape:pb-0 max-md:landscape:pt-0 md:flex-1 md:flex-row md:items-start md:justify-start md:p-8 md:pt-28 lg:p-12 lg:pt-28 xl:p-16 xl:pt-32">
           <div className="max-w-full space-y-4 sm:space-y-5 max-md:landscape:max-w-[min(42vw,20rem)] max-md:landscape:space-y-2 md:max-w-md md:translate-x-[6%] md:pl-6 lg:pl-10 xl:pl-14">
             <p className="hero-readable text-xs font-semibold uppercase tracking-[0.35em] text-zinc-500">Firdaus</p>
