@@ -137,7 +137,6 @@ export default function WelcomeIntro({ reveal, blockPortrait }) {
           decoding="async"
           fetchPriority="high"
         />
-
         {blockPortrait ? (
           <>
             <div className="welcome-rotate-phone mt-10 text-zinc-300">

@@ -1,7 +1,7 @@
-import { useLayoutEffect, useRef } from "react";
+import { useRef } from "react";
 import { useFrame } from '@react-three/fiber'
 import { PerspectiveCamera, OrbitControls, Center } from '@react-three/drei'
-import { Box3, MathUtils, Vector3 } from 'three'
+import { MathUtils, Vector3 } from 'three'
 import { Carpet } from './carpet.jsx'
 import {
   INITIAL_STORY_CAMERA,
@@ -51,8 +51,6 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
   const vFoamBlend = useRef(new Vector3())
   const vLook = useRef(new Vector3())
   const vStoryPos = useRef(new Vector3())
-  const hasSetBoundsCenter = useRef(false)
-  const boundsBox = useRef(new Box3())
   const lastScaleMul = useRef(1)
   const lastCameraFov = useRef(FOV_HERO)
   const lastLoggedScroll = useRef(-1)
@@ -68,10 +66,6 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
     manualOrbitActive.current = true
   }
 
-  useLayoutEffect(() => {
-    hasSetBoundsCenter.current = false
-  }, [storyCarpetDesign])
-
   useFrame((state) => {
     if (!cameraref.current) return
 
@@ -85,14 +79,6 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = 'default' })
       lastScaleMul.current = scaleMul
     }
     const fovBoost = aspect < 0.48 ? 14 : aspect < 0.55 ? 10 : aspect < 0.64 ? 6 : aspect < 0.76 ? 3 : 0
-
-    if (!hasSetBoundsCenter.current && modelRef.current) {
-      const box = boundsBox.current.setFromObject(modelRef.current)
-      if (!box.isEmpty()) {
-        box.getCenter(vCenter.current)
-        hasSetBoundsCenter.current = true
-      }
-    }
 
     const p = Math.min(1, Math.max(0, storyProgressRef?.current ?? 0))
     if (Math.abs(p - lastLoggedScroll.current) > 0.002) {

@@ -4,6 +4,7 @@ import "./App.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import HeroSection from "./components/HeroSection";
+import WelcomeIntro from "./components/WelcomeIntro.jsx";
 import FeatureSection from "./components/FeatureSection";
 import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
 import { MODEL_TEXTURE_2_URL, MODEL_TEXTURE_3_URL } from "./modelConstants.js";
@@ -226,6 +227,7 @@ function App() {
       ref={mainref}
       className="overflow-x-hidden bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-100"
     >
+      <WelcomeIntro reveal={modelReady} blockPortrait={false} />
       <Header />
 
       <HeroSection

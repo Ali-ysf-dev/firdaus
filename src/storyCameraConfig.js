@@ -7,7 +7,7 @@ export const STORY_SEGMENT = 1 / 3
 export const STORY_FOV = {
   hero: 48,
   displayDetail: 26,
-  durability: 42,
+  durability: 32,
 }
 
 /**
@@ -39,7 +39,7 @@ export const SURFACE_WINDOW = {
 
 /** Default camera transform used before scroll logic takes over. */
 export const INITIAL_STORY_CAMERA = {
-  position: [3.4821563489882656, 1.219071606362784, 5.929245271644066],
+  position: [0, 0.1325220176781472, 2.167749760178603],
   near: 0.1,
   far: 1000,
 }
