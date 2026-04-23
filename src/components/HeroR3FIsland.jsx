@@ -34,14 +34,17 @@ export default function HeroR3FIsland({
 }) {
   return (
     <Canvas
-      className="h-full w-full touch-pan-y"
+      className="h-full w-full touch-pan-y bg-transparent"
       dpr={dpr}
       gl={glConfig}
       frameloop={hideFixedHeroScene ? "never" : "demand"}
       flat
       linear
       resize={{ debounce: { scroll: 50, resize: 120 } }}
-      style={{ pointerEvents: hideFixedHeroScene ? "none" : "auto" }}
+      style={{
+        pointerEvents: hideFixedHeroScene ? "none" : "auto",
+        background: "transparent",
+      }}
     >
       <WebglContextLostGuard />
       <HeroFrameInvalidator

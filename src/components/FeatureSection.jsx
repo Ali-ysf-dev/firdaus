@@ -6,7 +6,7 @@ function FeatureSection({
   id,
   contentRef,
   sectionRef,
-  storyScrollEndRef,
+  storySectionMidRef,
   contentOnLeft = true,
   label,
   title,
@@ -20,12 +20,12 @@ function FeatureSection({
       ref={sectionRef}
       id={id}
       className={`relative flex min-h-[100dvh] items-center justify-between md:h-screen md:min-h-0 ${
-        isFirstChapter ? "overflow-visible" : ""
+        isFirstChapter ? "overflow-visible" : "mt-14 md:mt-20"
       }`}
     >
-      {storyScrollEndRef ? (
+      {storySectionMidRef ? (
         <div
-          ref={storyScrollEndRef}
+          ref={storySectionMidRef}
           className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-px w-px -translate-x-1/2 -translate-y-1/2 opacity-0"
           aria-hidden
         />

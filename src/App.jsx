@@ -9,7 +9,7 @@ import FeatureSection from "./components/FeatureSection";
 import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
 import { MODEL_URL, getDracoDecoderPath } from "./modelConstants.js";
 import { featureSections } from "./data/sections.jsx";
-import { heroColumnMetrics } from "./heroStoryScroll.js";
+import { heroColumnMetrics, storyProgressWhenSectionMidCentered } from "./heroStoryScroll.js";
 
 function App() {
   const mainref = useRef(null);
@@ -33,8 +33,12 @@ function App() {
   const requestHeroFrameRef = useRef(() => {});
   /** Hero shell translate; invoked from ScrollTrigger scrub so it stays in sync without a global ticker. */
   const heroShellLayoutSyncRef = useRef(() => {});
-  /** Marks vertical midpoint of chapter 3 (Presence) — story scroll progress completes here. */
+  /** Marks vertical midpoint of each chapter — shell shift timing keys off these. */
+  const surfaceSectionMidRef = useRef(null);
+  const foundationSectionMidRef = useRef(null);
   const presenceStoryMidRef = useRef(null);
+  /** `{ p1, p2 }` when measured; otherwise hero uses fixed quartile fallbacks. */
+  const shellShiftMilestonesRef = useRef(null);
   const [viewport, setViewport] = useState(() =>
     typeof window !== "undefined"
       ? { w: window.innerWidth, h: window.innerHeight }
@@ -46,12 +50,11 @@ function App() {
     const base = heroColumnMetrics(w, viewport.h);
     return {
       position: "fixed",
-      top: 0,
+      top: base.top,
       left: base.left,
       width: base.width,
-      /** `100dvh` avoids mobile toolbar show/hide changing `innerHeight` while scrolling (felt like the model “drops”). */
-      height: "100dvh",
-      maxHeight: "100dvh",
+      height: base.height,
+      maxHeight: base.height,
       zIndex: 36,
       opacity: 1,
       pointerEvents: "none",
@@ -142,11 +145,27 @@ function App() {
     let attempts = 0;
     const maxAttempts = 240;
 
+    const updateShellShiftMilestones = () => {
+      if (cancelled) return;
+      const st = storyTriggerRef.current;
+      const surf = surfaceSectionMidRef.current;
+      const found = foundationSectionMidRef.current;
+      if (!st || !surf || !found) return;
+      const pSurf = storyProgressWhenSectionMidCentered(surf, st);
+      const pFound = storyProgressWhenSectionMidCentered(found, st);
+      if (pSurf == null || pFound == null) return;
+      if (pFound <= pSurf + 0.02) return;
+      shellShiftMilestonesRef.current = { p1: pSurf, p2: pFound };
+      heroShellLayoutSyncRef.current?.();
+    };
+
     const bind = () => {
       if (cancelled) return;
       const endEl = presenceStoryMidRef.current;
+      const surfEl = surfaceSectionMidRef.current;
+      const foundEl = foundationSectionMidRef.current;
       attempts += 1;
-      if (!endEl || !mainref.current) {
+      if (!endEl || !surfEl || !foundEl || !mainref.current) {
         if (attempts < maxAttempts) raf = requestAnimationFrame(bind);
         return;
       }
@@ -154,6 +173,7 @@ function App() {
       storyTriggerRef.current?.kill();
       storyGsapCtxRef.current?.revert();
       ScrollTrigger.getById("hero-story-progress")?.kill();
+      ScrollTrigger.removeEventListener("refresh", updateShellShiftMilestones);
 
       storyGsapCtxRef.current = gsap.context(() => {
         gsap.set(sceneRef.current, { x: 0, y: 0 });
@@ -180,7 +200,11 @@ function App() {
             });
           },
         });
-        requestAnimationFrame(() => ScrollTrigger.refresh());
+        ScrollTrigger.addEventListener("refresh", updateShellShiftMilestones);
+        requestAnimationFrame(() => {
+          ScrollTrigger.refresh();
+          updateShellShiftMilestones();
+        });
       }, mainref);
     };
 
@@ -189,6 +213,8 @@ function App() {
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
+      ScrollTrigger.removeEventListener("refresh", updateShellShiftMilestones);
+      shellShiftMilestonesRef.current = null;
       if (storyTickRafRef.current) {
         cancelAnimationFrame(storyTickRafRef.current);
         storyTickRafRef.current = 0;
@@ -273,6 +299,7 @@ function App() {
         sceneRef={sceneRef}
         storyProgressRef={storyProgressRef}
         heroShellLayoutSyncRef={heroShellLayoutSyncRef}
+        shellShiftMilestonesRef={shellShiftMilestonesRef}
         freezeHeroShellShift={false}
         hideFixedHeroScene={hideFixedHeroScene}
         heroSceneShellStyle={heroSceneShellStyle}
@@ -290,7 +317,15 @@ function App() {
             key={section.id}
             id={section.id}
             sectionRef={section.id === "presence" ? presenceSectionRef : undefined}
-            storyScrollEndRef={section.id === "presence" ? presenceStoryMidRef : undefined}
+            storySectionMidRef={
+              section.id === "surface"
+                ? surfaceSectionMidRef
+                : section.id === "foundation"
+                  ? foundationSectionMidRef
+                  : section.id === "presence"
+                    ? presenceStoryMidRef
+                    : undefined
+            }
             contentRef={featureContentRefs[i]}
             contentOnLeft={section.contentOnLeft}
             label={section.label}

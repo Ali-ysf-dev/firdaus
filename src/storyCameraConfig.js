@@ -6,9 +6,13 @@ export const STORY_SEGMENT = 1 / 3
 
 export const STORY_FOV = {
   hero: 48,
-  displayDetail: 26,
+  displayDetail: 5,
   durability: 32,
+  presence: 33.6,
 }
+
+/** Upward look-at offset applied only during Surface zoom framing. */
+export const SURFACE_AIM_OFFSET_Y = 0.47
 
 /**
  * Camera path keyframes used across the 3 story chapters.
@@ -25,16 +29,30 @@ export const STORY_FOV = {
  */
 export const STORY_CAMERA_KEYFRAMES = [
   [0, 0.1325220176781472, 2.167749760178603],
-  [0, 0.1325220176781472, 0.157749760178603],
-  [0, 0.58, 2.28],
+  [0, 0.1325220176781472, 2.167749760178603],
+  [1.5, 0.1325220176781472, 2.167749760178603],
   [0, 0.1325220176781472, 2.167749760178603],
 ]
 
 /** App scroll window where chapter 1 ("Surface") holds hero camera position. */
 export const SURFACE_WINDOW = {
-  start: 0.25,
-  end: 0.5,
-  blendOut: 0.055,
+  start: 0.20,
+  end: 0.55,
+  blendOut: 0.1,
+}
+
+/** App scroll window where chapter 2 ("Foundation") applies medium zoom framing. */
+export const FOUNDATION_WINDOW = {
+  start: 0.55,
+  end: 0.86,
+  blendOut: 0.09,
+}
+
+/** App scroll window where chapter 3 ("Presence") applies medium zoom framing. */
+export const PRESENCE_WINDOW = {
+  start: 0.86,
+  end: 1,
+  blendOut: 0.08,
 }
 
 /** Default camera transform used before scroll logic takes over. */

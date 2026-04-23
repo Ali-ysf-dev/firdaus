@@ -17,6 +17,7 @@ function HeroSection({
   requestHeroFrameRef,
   storyCarpetDesign = "default",
   storyDesignGlitchToken = 0,
+  shellShiftMilestonesRef,
 }) {
   const heroShellRef = useRef(null);
   const heroGlitchHostRef = useRef(null);
@@ -68,7 +69,8 @@ function HeroSection({
         freezeHeroShellShiftRef.current && shellShiftProgressLatchRef.current != null
           ? shellShiftProgressLatchRef.current
           : pLive;
-      const x = storyCanvasShiftXPx(pShift, w, h);
+      const milestones = shellShiftMilestonesRef?.current ?? undefined;
+      const x = storyCanvasShiftXPx(pShift, w, h, milestones);
       el.style.transform = `translate3d(${x}px, 0, 0)`;
       requestHeroFrameRef?.current();
     };
@@ -84,7 +86,7 @@ function HeroSection({
       }
       window.removeEventListener("resize", syncShellShift);
     };
-  }, [heroShellLayoutSyncRef, requestHeroFrameRef, storyProgressRef]);
+  }, [heroShellLayoutSyncRef, requestHeroFrameRef, shellShiftMilestonesRef, storyProgressRef]);
 
   useLayoutEffect(() => {
     const el = heroShellRef.current;
@@ -96,9 +98,10 @@ function HeroSection({
       freezeHeroShellShift && shellShiftProgressLatchRef.current != null
         ? shellShiftProgressLatchRef.current
         : pLive;
-    const x = storyCanvasShiftXPx(pShift, w, h);
+    const milestones = shellShiftMilestonesRef?.current ?? undefined;
+    const x = storyCanvasShiftXPx(pShift, w, h, milestones);
     el.style.transform = `translate3d(${x}px, 0, 0)`;
-  }, [freezeHeroShellShift, hideFixedHeroScene, storyProgressRef]);
+  }, [freezeHeroShellShift, hideFixedHeroScene, shellShiftMilestonesRef, storyProgressRef]);
 
   useEffect(() => {
     if (storyDesignGlitchToken === 0) return;
@@ -152,7 +155,7 @@ function HeroSection({
 
       <div
         ref={heroShellRef}
-        className={`fixed z-[36] overflow-hidden rounded-2xl ring-1 ring-zinc-700/35 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.55)] transition-opacity duration-500 ease-out max-md:landscape:rounded-xl md:rounded-3xl md:ring-zinc-600/25 ${hideFixedHeroScene ? "pointer-events-none" : ""}`}
+        className={`fixed z-[36] overflow-hidden transition-opacity duration-500 ease-out ${hideFixedHeroScene ? "pointer-events-none" : ""}`}
         style={{
           ...heroSceneShellStyle,
           opacity: hideFixedHeroScene ? 0 : heroSceneShellStyle.opacity ?? 1,
@@ -168,7 +171,7 @@ function HeroSection({
             <Suspense
               fallback={
                 <div
-                  className="h-full w-full animate-pulse bg-zinc-900/45"
+                  className="h-full w-full animate-pulse bg-transparent"
                   aria-busy="true"
                   aria-label="Loading 3D scene"
                 />
