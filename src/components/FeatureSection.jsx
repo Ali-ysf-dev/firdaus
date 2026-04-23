@@ -19,8 +19,8 @@ function FeatureSection({
     <section
       ref={sectionRef}
       id={id}
-      className={`relative flex min-h-[100dvh] items-center justify-between md:h-screen md:min-h-0 ${
-        isFirstChapter ? "overflow-visible" : "mt-14 md:mt-20"
+      className={`relative flex min-h-[100dvh] items-center justify-between max-[1024px]:landscape:min-h-[140dvh] md:h-screen md:min-h-0 ${
+        isFirstChapter ? "overflow-visible" : "mt-24 max-[1024px]:landscape:mt-56 md:mt-20"
       }`}
     >
       {storySectionMidRef ? (
@@ -42,23 +42,23 @@ function FeatureSection({
           />
         </>
       )}
-      <div className="relative z-[32] flex min-h-0 w-full flex-1 flex-col items-stretch justify-center px-3 py-8 sm:px-4 max-md:landscape:flex-row max-md:landscape:items-center max-md:landscape:px-5 max-md:landscape:py-5 md:flex-row md:items-center md:justify-between md:px-0 md:py-0">
+      <div className="relative z-[32] flex min-h-0 w-full flex-1 flex-col items-stretch justify-center px-3 py-8 sm:px-4 max-md:landscape:px-5 max-md:landscape:py-10 md:flex-row md:items-center md:justify-between md:px-0 md:py-0">
         {contentOnLeft && (
-          <div className="hidden w-[50%] max-md:landscape:block md:block" aria-hidden />
+          <div className="hidden w-[50%] md:block" aria-hidden />
         )}
         <div
           ref={contentRef}
-          className={`flex w-full max-w-2xl shrink-0 flex-col self-center max-md:landscape:w-1/2 max-md:landscape:max-w-none md:w-1/2 md:max-w-none ${contentOnLeft ? "" : "md:order-1"}`}
+          className={`flex w-full max-w-2xl shrink-0 flex-col self-center md:w-1/2 md:max-w-none ${contentOnLeft ? "" : "md:order-1"}`}
         >
-          <ContentCard contentOnLeft={contentOnLeft} fullWidth className="mx-0 sm:mx-4 max-md:landscape:mx-2">
+          <ContentCard contentOnLeft={contentOnLeft} fullWidth className="mx-0 sm:mx-4">
             <div className="space-y-6">
               <div className="animate-in inline-block">
                 <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</span>
               </div>
-              <h2 className="animate-in text-3xl font-bold leading-tight tracking-tight text-zinc-50 sm:text-4xl lg:text-5xl xl:text-6xl">
+              <h2 className="animate-in text-3xl font-bold leading-tight tracking-tight text-zinc-50 max-md:landscape:text-2xl sm:text-4xl lg:text-5xl xl:text-6xl">
                 {title}
               </h2>
-              <p className="animate-in max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg lg:text-xl">
+              <p className="animate-in max-w-xl text-base leading-relaxed text-zinc-400 max-md:landscape:text-sm sm:text-lg lg:text-xl">
                 {description}
               </p>
             </div>
@@ -78,7 +78,7 @@ function FeatureSection({
           />
         </div>
         {!contentOnLeft && (
-          <div className="order-2 hidden w-[50%] max-md:landscape:block md:block" aria-hidden />
+          <div className="order-2 hidden w-[50%] md:block" aria-hidden />
         )}
       </div>
     </section>

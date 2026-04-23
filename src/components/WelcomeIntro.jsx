@@ -137,13 +137,16 @@ export default function WelcomeIntro({ reveal, blockPortrait }) {
           decoding="async"
           fetchPriority="high"
         />
-        {blockPortrait ? (
-          <>
-            <div className="welcome-rotate-phone mt-10 text-zinc-300">
-              <ScreenRotationIcon className="mx-auto h-28 w-28 sm:h-32 sm:w-32" />
-            </div>
-          </>
-        ) : null}
+        <div className={`${blockPortrait ? "mt-10" : "mt-7 md:hidden"} text-zinc-300`}>
+          <div className="welcome-rotate-phone">
+            <ScreenRotationIcon className={`${blockPortrait ? "h-28 w-28 sm:h-32 sm:w-32" : "h-16 w-16"} mx-auto`} />
+          </div>
+          {!blockPortrait ? (
+            <p className="mt-2 text-xs tracking-wide text-zinc-400">
+              Rotate device for a better story view
+            </p>
+          ) : null}
+        </div>
       </div>
     </div>
   );

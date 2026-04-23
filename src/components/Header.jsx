@@ -43,14 +43,14 @@ function Header() {
 
   return (
     <div className="relative z-40 border-b border-zinc-800/70 bg-zinc-950/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl justify-center px-4 py-2 sm:px-6">
+      <div className="mx-auto flex max-w-6xl justify-center px-4 py-1.5 sm:px-6">
         <header
           style={{
             borderRadius: "0 0 18px 18px",
             boxShadow:
               "0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.06), 0 12px 30px -8px rgba(0, 0, 0, 0.08)",
           }}
-          className="relative flex w-full max-w-[calc(100vw-2rem)] items-center justify-between gap-3 bg-zinc-900/90 px-3 py-2 backdrop-blur-xl sm:max-w-none sm:px-6 md:justify-center md:gap-10 lg:gap-16 lg:px-10"
+          className="relative flex w-full max-w-[calc(100vw-2rem)] items-center justify-between gap-3 bg-zinc-900/90 px-3 py-1.5 backdrop-blur-xl sm:max-w-none sm:px-6 md:justify-center md:gap-10 lg:gap-16 lg:px-10"
         >
           <a
             href="#top"
@@ -67,14 +67,14 @@ function Header() {
               alt="Firdaus"
               width={160}
               height={40}
-              className="h-7 w-auto max-w-[7.5rem] bg-transparent object-contain object-left sm:h-8 sm:max-w-[9.5rem] md:h-9 md:max-w-[11rem]"
+              className="h-6 w-auto max-w-[7rem] bg-transparent object-contain object-left sm:h-7 sm:max-w-[9rem] md:h-8 md:max-w-[10.5rem]"
               decoding="async"
             />
           </a>
 
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-lg p-2 text-zinc-200 transition hover:bg-zinc-800/80 md:hidden"
+            className="inline-flex items-center justify-center rounded-lg p-1.5 text-zinc-200 transition hover:bg-zinc-800/80 md:hidden"
             aria-expanded={menuOpen}
             aria-controls="mobile-nav-menu"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -82,36 +82,6 @@ function Header() {
           >
             <MenuIcon open={menuOpen} />
           </button>
-
-          <nav
-            id="mobile-nav-menu"
-            aria-label="Sections"
-            className={`absolute right-3 top-[calc(100%+0.35rem)] z-50 min-w-[12rem] flex-col gap-0.5 rounded-2xl border border-zinc-800/90 bg-zinc-900/95 p-2 py-2 shadow-xl backdrop-blur-xl md:hidden ${
-              menuOpen ? "flex" : "hidden"
-            }`}
-          >
-            {NAV_LINKS.map((item) =>
-              item.to ? (
-                <Link
-                  key={item.key}
-                  to={item.to}
-                  className="rounded-lg px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800/80 hover:text-zinc-100"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <a
-                  key={item.key}
-                  href={item.href}
-                  className="rounded-lg px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800/80 hover:text-zinc-100"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {item.label}
-                </a>
-              ),
-            )}
-          </nav>
 
           <nav className="hidden items-center gap-8 text-sm text-zinc-400 md:flex">
             {NAV_LINKS.map((item) =>
@@ -127,6 +97,40 @@ function Header() {
             )}
           </nav>
         </header>
+      </div>
+
+      <div
+        className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-out md:hidden ${
+          menuOpen ? "max-h-[80dvh] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <nav
+          id="mobile-nav-menu"
+          aria-label="Sections"
+          className="mx-3 mb-4 mt-2 flex flex-col gap-1 rounded-2xl border border-zinc-700/90 bg-zinc-950/98 p-2 shadow-2xl"
+        >
+          {NAV_LINKS.map((item) =>
+            item.to ? (
+              <Link
+                key={item.key}
+                to={item.to}
+                className="rounded-xl border border-transparent bg-zinc-900/55 px-4 py-3 text-[0.95rem] font-medium text-zinc-100 transition hover:border-zinc-600/70 hover:bg-zinc-800/85"
+                onClick={() => setMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <a
+                key={item.key}
+                href={item.href}
+                className="rounded-xl border border-transparent bg-zinc-900/55 px-4 py-3 text-[0.95rem] font-medium text-zinc-100 transition hover:border-zinc-600/70 hover:bg-zinc-800/85"
+                onClick={() => setMenuOpen(false)}
+              >
+                {item.label}
+              </a>
+            ),
+          )}
+        </nav>
       </div>
     </div>
   );

@@ -19,8 +19,12 @@ export function shiftShellToHalfCenter(viewportW, shellLeft, shellWidth, useRigh
 export function heroColumnMetrics(w, h) {
   const landscape = isLandscapeViewport(w, h);
   const gutter = w < 400 ? 10 : w < 640 ? 14 : 20;
+  const isPortraitMobile = w < 768 && !landscape;
   let widthPx;
-  if (w < 400) {
+  if (isPortraitMobile) {
+    /** Keep the hero canvas compact/stable on phones so copy and model do not collide. */
+    widthPx = Math.min(w * 0.9, 430);
+  } else if (w < 400) {
     widthPx = Math.max(220, w - gutter * 2);
   } else if (w < 640) {
     widthPx = landscape ? Math.min(w * 0.42, 420) : Math.min(w * 0.94, w - gutter * 2);
@@ -32,11 +36,11 @@ export function heroColumnMetrics(w, h) {
     widthPx = Math.min(w * 0.72, 920);
   }
   /** Hero WebGL shell: 80% of column size, centered in the viewport. */
-  const shellScale = 0.8;
+  const shellScale = isPortraitMobile ? 0.86 : 0.8;
   widthPx *= shellScale;
-  const heightPx = Math.max(1, h) * shellScale;
+  const heightPx = isPortraitMobile ? Math.min(Math.max(280, h * 0.46), 430) : Math.max(1, h) * shellScale;
   const leftPx = w / 2 - widthPx / 2;
-  const topPx = (h - heightPx) / 2;
+  const topPx = isPortraitMobile ? Math.max(92, (h - heightPx) * 0.58) : (h - heightPx) / 2;
   return { left: leftPx, top: topPx, width: widthPx, height: heightPx };
 }
 
@@ -61,6 +65,8 @@ export function storyProgressWhenSectionMidCentered(el, st) {
  * `p1` = Surface, `p2` = Foundation (Presence completes at progress 1).
  */
 export function storyCanvasShiftXPx(progress, w, h, milestones) {
+  if (w < 768 && !isLandscapeViewport(w, h)) return 0;
+
   const { left, width } = heroColumnMetrics(w, h);
   const toLeft = shiftShellToHalfCenter(w, left, width, false);
   const toRight = shiftShellToHalfCenter(w, left, width, true);
