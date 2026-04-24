@@ -1,4 +1,4 @@
-import { Suspense, lazy, useLayoutEffect, useMemo, useRef } from "react";
+import React, { Suspense, lazy, useLayoutEffect, useMemo, useRef } from "react";
 import { storyCanvasShiftXPx } from "../heroStoryScroll.js";
 import { useAdaptiveDpr } from "../hooks/useAdaptiveDpr.js";
 
@@ -182,4 +182,5 @@ function HeroSection({
   );
 }
 
-export default HeroSection;
+/** Memoized so unrelated App state (pinAnchor, viewport, modelReady) does not rebuild the hero subtree. */
+export default React.memo(HeroSection);

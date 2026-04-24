@@ -1,4 +1,4 @@
-import { Suspense, forwardRef, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, forwardRef, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Center, Bounds, Html } from "@react-three/drei";
 import { Carpet } from "../carpet";
@@ -12,9 +12,9 @@ import SceneLoadFallback from "./SceneLoadFallback.jsx";
 import CarpetDesignPicker from "./CarpetDesignPicker.jsx";
 import WebglContextLostGuard from "./WebglContextLostGuard.jsx";
 
-function ViewerCarpet({ design }) {
+const ViewerCarpet = React.memo(function ViewerCarpet({ design }) {
   return <Carpet design={design} shadowsEnabled={false} />;
-}
+});
 
 function ViewerPerspectiveFit() {
   const camera = useThree((s) => s.camera);
@@ -27,7 +27,7 @@ function ViewerPerspectiveFit() {
   return null;
 }
 
-function ViewerScene({ design }) {
+const ViewerScene = React.memo(function ViewerScene({ design }) {
   return (
     <>
       <color attach="background" args={["#18181b"]} />
@@ -54,7 +54,7 @@ function ViewerScene({ design }) {
       />
     </>
   );
-}
+});
 
 const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
   const [viewerCarpetDesign, setViewerCarpetDesign] = useState("default");
@@ -114,7 +114,9 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
               <Canvas
                 dpr={dpr}
                 gl={glConfig}
-                frameloop="always"
+                /** Demand mode: only renders frames when something actually changes (user input, damping,
+                 *  design swap). Prevents the viewer canvas from burning GPU at 60fps while idle. */
+                frameloop="demand"
                 flat
                 linear
                 resize={{ debounce: { scroll: 50, resize: 120 } }}

@@ -1,9 +1,9 @@
-import { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import Sence from "../Sence.jsx";
 import WebglContextLostGuard from "./WebglContextLostGuard.jsx";
 
-function HeroFrameInvalidator({ requestHeroFrameRef, hideFixedHeroScene, storyCarpetDesign, dpr }) {
+function HeroFrameInvalidator({ requestHeroFrameRef, storyCarpetDesign }) {
   const invalidate = useThree((state) => state.invalidate);
   useEffect(() => {
     if (!requestHeroFrameRef) return;
@@ -13,17 +13,20 @@ function HeroFrameInvalidator({ requestHeroFrameRef, hideFixedHeroScene, storyCa
     };
   }, [invalidate, requestHeroFrameRef]);
 
+  /** One invalidate per design swap is enough — Carpet drives its own rAF loop during the glitch. */
   useEffect(() => {
     invalidate();
-  }, [dpr, hideFixedHeroScene, invalidate, storyCarpetDesign]);
+  }, [invalidate, storyCarpetDesign]);
 
   return null;
 }
 
+const MemoHeroFrameInvalidator = React.memo(HeroFrameInvalidator);
+
 /**
  * Hero WebGL subtree in its own async chunk so the main bundle does not parse @react-three/fiber up front.
  */
-export default function HeroR3FIsland({
+function HeroR3FIsland({
   dpr,
   glConfig,
   hideFixedHeroScene,
@@ -47,11 +50,9 @@ export default function HeroR3FIsland({
       }}
     >
       <WebglContextLostGuard />
-      <HeroFrameInvalidator
+      <MemoHeroFrameInvalidator
         requestHeroFrameRef={requestHeroFrameRef}
-        hideFixedHeroScene={hideFixedHeroScene}
         storyCarpetDesign={storyCarpetDesign}
-        dpr={dpr}
       />
       <Suspense fallback={null}>
         <Sence
@@ -63,3 +64,9 @@ export default function HeroR3FIsland({
     </Canvas>
   );
 }
+
+/**
+ * Memoized so re-renders of `HeroSection` caused by unrelated parent state (viewport, pin, etc.)
+ * do not re-reconcile the WebGL subtree. Props are mostly stable refs/memoized objects.
+ */
+export default React.memo(HeroR3FIsland);

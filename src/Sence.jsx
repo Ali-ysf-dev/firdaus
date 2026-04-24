@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { PerspectiveCamera, Center } from "@react-three/drei";
 import { Vector3 } from "three";
@@ -157,4 +157,5 @@ function Sence({ storyProgressRef, onModelLoad, storyCarpetDesign = "default" })
   );
 }
 
-export default Sence;
+/** Memoized so App's unrelated state churn (viewport / pin / modelReady) cannot trigger scene reconciliation. */
+export default React.memo(Sence);
