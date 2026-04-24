@@ -110,12 +110,30 @@ function App() {
   const preloadAlternateModels = useCallback(() => {
     if (hasTriggeredAltModelPreloadRef.current) return;
     hasTriggeredAltModelPreloadRef.current = true;
-    import("@react-three/drei")
-      .then(({ useGLTF }) => {
-        useGLTF.setDecoderPath(getDracoDecoderPath());
-        /** Warm alternate carpet models once the page has finished initial load. */
-        useGLTF.preload(MODEL_TEXTURE_2_URL, true, false);
-        useGLTF.preload(MODEL_TEXTURE_3_URL, true, false);
+    Promise.all([
+      import("three/examples/jsm/loaders/GLTFLoader.js"),
+      import("three/examples/jsm/loaders/DRACOLoader.js"),
+    ])
+      .then(async ([{ GLTFLoader }, { DRACOLoader }]) => {
+        /** Warm alternate carpet models sequentially after initial page load.
+         *  `texture3` starts only after `texture2` has fully finished. */
+        const loader = new GLTFLoader();
+        const draco = new DRACOLoader();
+        draco.setDecoderPath(getDracoDecoderPath());
+        draco.setWorkerLimit(1);
+        loader.setDRACOLoader(draco);
+        try {
+          await loader.loadAsync(MODEL_TEXTURE_2_URL);
+        } catch {
+          // Keep going: a single failed preload should not block the next one.
+        }
+        try {
+          await loader.loadAsync(MODEL_TEXTURE_3_URL);
+        } catch {
+          // Ignore preload failures silently; runtime loading still works on demand.
+        } finally {
+          draco.dispose();
+        }
       })
       .catch(() => {});
   }, []);
