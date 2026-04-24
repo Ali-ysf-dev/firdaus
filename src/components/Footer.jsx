@@ -2,8 +2,8 @@ function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative z-[50] w-full bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] sm:px-6">
-      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-6 md:flex-row">
+    <footer className="relative z-[50] w-full bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-5">
+      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 md:flex-row md:gap-4">
         <a
           href="#top"
           className="shrink-0 bg-transparent opacity-95 transition hover:opacity-100"
@@ -16,14 +16,14 @@ function Footer() {
           <img
             src="/Firdaus_logo.avif"
             alt="Firdaus"
-            width={180}
-            height={44}
-            className="h-10 w-auto max-w-[12rem] bg-transparent object-contain md:h-11 md:max-w-[13rem]"
+            width={140}
+            height={32}
+            className="h-7 w-auto max-w-[9rem] bg-transparent object-contain md:h-8 md:max-w-[10rem]"
             decoding="async"
             loading="lazy"
           />
         </a>
-        <p className="text-center text-sm text-zinc-500 md:text-right">
+        <p className="text-center text-xs text-zinc-500 md:text-right">
           © {year} Firdaus. Designed and developed by ALI YOUSSEF.
         </p>
       </div>

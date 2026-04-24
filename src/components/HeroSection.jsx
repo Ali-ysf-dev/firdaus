@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { Suspense, lazy, useLayoutEffect, useMemo, useRef } from "react";
 import { storyCanvasShiftXPx } from "../heroStoryScroll.js";
 import { useAdaptiveDpr } from "../hooks/useAdaptiveDpr.js";
 
@@ -6,6 +6,7 @@ const HeroR3FIsland = lazy(() => import("./HeroR3FIsland.jsx"));
 
 function HeroSection({
   sceneRef,
+  heroShellRef: externalShellRef,
   storyProgressRef,
   heroShellLayoutSyncRef,
   freezeHeroShellShift = false,
@@ -16,11 +17,14 @@ function HeroSection({
   heroCalloutRef,
   requestHeroFrameRef,
   storyCarpetDesign = "default",
-  storyDesignGlitchToken = 0,
   shellShiftMilestonesRef,
 }) {
   const heroShellRef = useRef(null);
-  const heroGlitchHostRef = useRef(null);
+  /** Keeps the parent's measurement ref in sync with the DOM node React assigns here. */
+  const setHeroShellEl = (el) => {
+    heroShellRef.current = el;
+    if (externalShellRef) externalShellRef.current = el;
+  };
   const hideFixedHeroSceneRef = useRef(hideFixedHeroScene);
   const freezeHeroShellShiftRef = useRef(freezeHeroShellShift);
   /** Story progress to use for horizontal shell shift while viewer is in view (no further “down-scroll” motion). */
@@ -103,19 +107,6 @@ function HeroSection({
     el.style.transform = `translate3d(${x}px, 0, 0)`;
   }, [freezeHeroShellShift, hideFixedHeroScene, shellShiftMilestonesRef, storyProgressRef]);
 
-  useEffect(() => {
-    if (storyDesignGlitchToken === 0) return;
-    const el = heroGlitchHostRef.current;
-    if (!el) return;
-    el.classList.remove("viewer-canvas-glitch");
-    void el.offsetWidth;
-    el.classList.add("viewer-canvas-glitch");
-    const t = window.setTimeout(() => {
-      el.classList.remove("viewer-canvas-glitch");
-    }, 480);
-    return () => window.clearTimeout(t);
-  }, [storyDesignGlitchToken]);
-
   return (
     <section className="relative flex min-h-[100dvh] flex-col overflow-visible bg-transparent max-md:landscape:min-h-[115dvh] max-md:landscape:px-5 max-md:landscape:py-6 md:h-screen md:flex-row">
       <div ref={contentRef} className="pointer-events-none flex min-h-0 flex-1 flex-col md:contents">
@@ -154,7 +145,7 @@ function HeroSection({
       </div>
 
       <div
-        ref={heroShellRef}
+        ref={setHeroShellEl}
         className={`fixed z-[36] overflow-hidden transition-opacity duration-500 ease-out ${hideFixedHeroScene ? "pointer-events-none" : ""}`}
         style={{
           ...heroSceneShellStyle,
@@ -164,10 +155,7 @@ function HeroSection({
         aria-hidden={hideFixedHeroScene}
       >
         <div ref={sceneRef} className="absolute inset-0 min-h-0 min-w-0">
-          <div
-            ref={heroGlitchHostRef}
-            className="hero-glitch-host viewer-glitch-host relative isolate h-full min-h-0 w-full min-w-0"
-          >
+          <div className="relative isolate h-full min-h-0 w-full min-w-0">
             <Suspense
               fallback={
                 <div

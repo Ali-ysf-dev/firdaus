@@ -1,4 +1,4 @@
-import { Suspense, forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Suspense, forwardRef, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Center, Bounds, Html } from "@react-three/drei";
 import { Carpet } from "../carpet";
@@ -58,7 +58,6 @@ function ViewerScene({ design }) {
 
 const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
   const [viewerCarpetDesign, setViewerCarpetDesign] = useState("default");
-  const [viewerDesignGlitchToken, setViewerDesignGlitchToken] = useState(0);
   const viewerDesignRef = useRef("default");
   viewerDesignRef.current = viewerCarpetDesign;
 
@@ -66,10 +65,8 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
     if (id === viewerDesignRef.current) return;
     viewerDesignRef.current = id;
     setViewerCarpetDesign(id);
-    setViewerDesignGlitchToken((t) => t + 1);
   }, []);
 
-  const glitchWrapRef = useRef(null);
   const dpr = useAdaptiveDpr();
   const glConfig = useMemo(() => {
     const narrowMobile =
@@ -83,19 +80,6 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
       powerPreference: narrowMobile ? "default" : "high-performance",
     };
   }, [dpr]);
-
-  useEffect(() => {
-    if (viewerDesignGlitchToken === 0) return;
-    const el = glitchWrapRef.current;
-    if (!el) return;
-    el.classList.remove("viewer-canvas-glitch");
-    void el.offsetWidth;
-    el.classList.add("viewer-canvas-glitch");
-    const t = window.setTimeout(() => {
-      el.classList.remove("viewer-canvas-glitch");
-    }, 480);
-    return () => window.clearTimeout(t);
-  }, [viewerDesignGlitchToken]);
 
   return (
     <section
@@ -122,10 +106,7 @@ const ModelViewerSection = forwardRef(function ModelViewerSection(_props, ref) {
               onChange={onViewerCarpetDesignChange}
             />
           </div>
-          <div
-            ref={glitchWrapRef}
-            className="viewer-glitch-host relative isolate min-h-0 w-full overflow-hidden"
-          >
+          <div className="relative isolate min-h-0 w-full overflow-hidden">
             <div
               ref={ref}
               className="aspect-[3/4] w-full min-h-[220px] min-[400px]:aspect-[4/5] min-[520px]:aspect-[16/10] md:aspect-[2/1]"

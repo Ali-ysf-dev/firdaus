@@ -7,13 +7,26 @@ import HeroSection from "./components/HeroSection";
 import WelcomeIntro from "./components/WelcomeIntro.jsx";
 import FeatureSection from "./components/FeatureSection";
 import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
-import { MODEL_URL, getDracoDecoderPath } from "./modelConstants.js";
+import {
+  MODEL_TEXTURE_2_URL,
+  MODEL_TEXTURE_3_URL,
+  MODEL_URL,
+  getDracoDecoderPath,
+} from "./modelConstants.js";
 import { featureSections } from "./data/sections.jsx";
 import { heroColumnMetrics, storyProgressWhenSectionMidCentered } from "./heroStoryScroll.js";
+
+/**
+ * Vertical nudge for the pinned hero canvas, in pixels.
+ * Negative => move the pinned model UP. Positive => move it DOWN.
+ * Change this single number to shift the pin position without touching any other logic.
+ */
+const HERO_PIN_VERTICAL_OFFSET_PX = -100;
 
 function App() {
   const mainref = useRef(null);
   const sceneRef = useRef(null);
+  const heroShellRef = useRef(null);
   const heroContentRef = useRef(null);
   const heroCalloutRef = useRef(null);
 
@@ -27,7 +40,6 @@ function App() {
   const storyProgressRef = useRef(0);
   const [modelReady, setModelReady] = useState(false);
   const [storyCarpetDesign, setStoryCarpetDesign] = useState("default");
-  const [storyDesignGlitchToken, setStoryDesignGlitchToken] = useState(0);
   const storyCarpetDesignRef = useRef("default");
   storyCarpetDesignRef.current = storyCarpetDesign;
   const requestHeroFrameRef = useRef(() => {});
@@ -45,9 +57,43 @@ function App() {
       : { w: 1200, h: 800 },
   );
 
+  const [gsapLibsReady, setGsapLibsReady] = useState(false);
+  const gsapRef = useRef(null);
+  const scrollTriggerRef = useRef(null);
+  const storyTriggerRef = useRef(null);
+  const storyGsapCtxRef = useRef(null);
+  const modelReadyTimeoutRef = useRef(0);
+  const hasMarkedModelReadyRef = useRef(false);
+  const pendingStoryProgressRef = useRef(0);
+  const storyTickRafRef = useRef(0);
+  const hasTriggeredAltModelPreloadRef = useRef(false);
+  /** Scroll-Y (in px) where the hero canvas unpins from the viewport and sticks at its current position. */
+  const pinReleaseScrollYRef = useRef(null);
+  const evaluateHeroPinRef = useRef(() => {});
+  const isHeroPinReleasedRef = useRef(false);
+  const [isHeroPinReleased, setIsHeroPinReleased] = useState(false);
+  /** Document-Y of the shell's rendered top, measured at the exact frame of release. Guarantees no jump. */
+  const [pinAnchorTopDocY, setPinAnchorTopDocY] = useState(null);
+
   const heroSceneShellStyle = useMemo(() => {
     const { w } = viewport;
     const base = heroColumnMetrics(w, viewport.h);
+    /** After the Presence chapter centers, unpin from the viewport so the canvas scrolls away with the page.
+     *  `pinAnchorTopDocY` is the shell's literal rendered document-Y at the release frame, so the
+     *  fixed→absolute handoff lands on the exact same pixel. `HERO_PIN_VERTICAL_OFFSET_PX` nudges it. */
+    if (isHeroPinReleased && typeof pinAnchorTopDocY === "number") {
+      return {
+        position: "absolute",
+        top: pinAnchorTopDocY + HERO_PIN_VERTICAL_OFFSET_PX,
+        left: base.left,
+        width: base.width,
+        height: base.height,
+        maxHeight: base.height,
+        zIndex: 36,
+        opacity: 1,
+        pointerEvents: "none",
+      };
+    }
     return {
       position: "fixed",
       top: base.top,
@@ -59,17 +105,59 @@ function App() {
       opacity: 1,
       pointerEvents: "none",
     };
-  }, [viewport]);
+  }, [viewport, isHeroPinReleased, pinAnchorTopDocY]);
 
-  const [gsapLibsReady, setGsapLibsReady] = useState(false);
-  const gsapRef = useRef(null);
-  const scrollTriggerRef = useRef(null);
-  const storyTriggerRef = useRef(null);
-  const storyGsapCtxRef = useRef(null);
-  const modelReadyTimeoutRef = useRef(0);
-  const hasMarkedModelReadyRef = useRef(false);
-  const pendingStoryProgressRef = useRef(0);
-  const storyTickRafRef = useRef(0);
+  const preloadAlternateModels = useCallback(() => {
+    if (hasTriggeredAltModelPreloadRef.current) return;
+    hasTriggeredAltModelPreloadRef.current = true;
+    import("@react-three/drei")
+      .then(({ useGLTF }) => {
+        useGLTF.setDecoderPath(getDracoDecoderPath());
+        /** Warm alternate carpet models once the page has finished initial load. */
+        useGLTF.preload(MODEL_TEXTURE_2_URL, true, false);
+        useGLTF.preload(MODEL_TEXTURE_3_URL, true, false);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (hasTriggeredAltModelPreloadRef.current) return;
+
+    let idleHandle = 0;
+    let timeoutHandle = 0;
+
+    const schedule = () => {
+      if (hasTriggeredAltModelPreloadRef.current) return;
+      const ric = window.requestIdleCallback;
+      if (typeof ric === "function") {
+        idleHandle = ric(() => preloadAlternateModels(), { timeout: 2000 });
+      } else {
+        /** Small delay so alternate model fetching does not contend with first-paint work. */
+        timeoutHandle = window.setTimeout(preloadAlternateModels, 600);
+      }
+    };
+
+    if (document.readyState === "complete") {
+      schedule();
+      return () => {
+        if (idleHandle && typeof window.cancelIdleCallback === "function") {
+          window.cancelIdleCallback(idleHandle);
+        }
+        if (timeoutHandle) window.clearTimeout(timeoutHandle);
+      };
+    }
+
+    const onLoad = () => schedule();
+    window.addEventListener("load", onLoad, { once: true });
+    return () => {
+      window.removeEventListener("load", onLoad);
+      if (idleHandle && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleHandle);
+      }
+      if (timeoutHandle) window.clearTimeout(timeoutHandle);
+    };
+  }, [preloadAlternateModels]);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +194,6 @@ function App() {
     if (id === storyCarpetDesignRef.current) return;
     storyCarpetDesignRef.current = id;
     setStoryCarpetDesign(id);
-    setStoryDesignGlitchToken((t) => t + 1);
   }, []);
 
   /** Stable for `Carpet` — inline lambdas retrigger `useEffect` every render and can stress mobile Safari. */
@@ -156,6 +243,11 @@ function App() {
       if (pSurf == null || pFound == null) return;
       if (pFound <= pSurf + 0.02) return;
       shellShiftMilestonesRef.current = { p1: pSurf, p2: pFound };
+      /** Scroll position where the Presence section midpoint reaches viewport center (story progress = 1). */
+      if (typeof st.end === "number") {
+        pinReleaseScrollYRef.current = st.end;
+      }
+      evaluateHeroPinRef.current();
       heroShellLayoutSyncRef.current?.();
     };
 
@@ -225,6 +317,45 @@ function App() {
       storyGsapCtxRef.current = null;
     };
   }, [gsapLibsReady]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let raf = 0;
+    const tick = () => {
+      raf = 0;
+      const releaseY = pinReleaseScrollYRef.current;
+      if (typeof releaseY !== "number") return;
+      const past = window.scrollY >= releaseY;
+      if (past === isHeroPinReleasedRef.current) return;
+
+      if (past) {
+        /** Capture the shell's literal rendered top right now, BEFORE flipping to `position: absolute`.
+         *  This sidesteps any offset-parent / layout math so the pin lands on the same pixel → no jump. */
+        const el = heroShellRef.current;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const anchor = Math.round(rect.top + window.scrollY);
+          setPinAnchorTopDocY(anchor);
+        }
+      } else {
+        setPinAnchorTopDocY(null);
+      }
+      isHeroPinReleasedRef.current = past;
+      setIsHeroPinReleased(past);
+    };
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(tick);
+    };
+    evaluateHeroPinRef.current = tick;
+    window.addEventListener("scroll", onScroll, { passive: true });
+    tick();
+    return () => {
+      evaluateHeroPinRef.current = () => {};
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   useEffect(() => {
     let lastW = window.innerWidth;
@@ -297,10 +428,11 @@ function App() {
 
       <HeroSection
         sceneRef={sceneRef}
+        heroShellRef={heroShellRef}
         storyProgressRef={storyProgressRef}
         heroShellLayoutSyncRef={heroShellLayoutSyncRef}
         shellShiftMilestonesRef={shellShiftMilestonesRef}
-        freezeHeroShellShift={false}
+        freezeHeroShellShift={isHeroPinReleased}
         hideFixedHeroScene={hideFixedHeroScene}
         heroSceneShellStyle={heroSceneShellStyle}
         onModelLoad={onHeroModelLoad}
@@ -308,7 +440,6 @@ function App() {
         heroCalloutRef={heroCalloutRef}
         requestHeroFrameRef={requestHeroFrameRef}
         storyCarpetDesign={storyCarpetDesign}
-        storyDesignGlitchToken={storyDesignGlitchToken}
       />
 
       <div className="relative z-0">
