@@ -8,8 +8,6 @@ import WelcomeIntro from "./components/WelcomeIntro.jsx";
 import FeatureSection from "./components/FeatureSection";
 import CarpetDesignPicker from "./components/CarpetDesignPicker.jsx";
 import {
-  MODEL_TEXTURE_2_URL,
-  MODEL_TEXTURE_3_URL,
   MODEL_URL,
   getDracoDecoderPath,
 } from "./modelConstants.js";
@@ -66,7 +64,6 @@ function App() {
   const hasMarkedModelReadyRef = useRef(false);
   const pendingStoryProgressRef = useRef(0);
   const storyTickRafRef = useRef(0);
-  const hasTriggeredAltModelPreloadRef = useRef(false);
   /** Scroll-Y (in px) where the hero canvas unpins from the viewport and sticks at its current position. */
   const pinReleaseScrollYRef = useRef(null);
   const evaluateHeroPinRef = useRef(() => {});
@@ -106,76 +103,6 @@ function App() {
       pointerEvents: "none",
     };
   }, [viewport, isHeroPinReleased, pinAnchorTopDocY]);
-
-  const preloadAlternateModels = useCallback(() => {
-    if (hasTriggeredAltModelPreloadRef.current) return;
-    hasTriggeredAltModelPreloadRef.current = true;
-    Promise.all([
-      import("three/examples/jsm/loaders/GLTFLoader.js"),
-      import("three/examples/jsm/loaders/DRACOLoader.js"),
-    ])
-      .then(async ([{ GLTFLoader }, { DRACOLoader }]) => {
-        /** Warm alternate carpet models sequentially after initial page load.
-         *  `texture3` starts only after `texture2` has fully finished. */
-        const loader = new GLTFLoader();
-        const draco = new DRACOLoader();
-        draco.setDecoderPath(getDracoDecoderPath());
-        draco.setWorkerLimit(1);
-        loader.setDRACOLoader(draco);
-        try {
-          await loader.loadAsync(MODEL_TEXTURE_2_URL);
-        } catch {
-          // Keep going: a single failed preload should not block the next one.
-        }
-        try {
-          await loader.loadAsync(MODEL_TEXTURE_3_URL);
-        } catch {
-          // Ignore preload failures silently; runtime loading still works on demand.
-        } finally {
-          draco.dispose();
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (hasTriggeredAltModelPreloadRef.current) return;
-
-    let idleHandle = 0;
-    let timeoutHandle = 0;
-
-    const schedule = () => {
-      if (hasTriggeredAltModelPreloadRef.current) return;
-      const ric = window.requestIdleCallback;
-      if (typeof ric === "function") {
-        idleHandle = ric(() => preloadAlternateModels(), { timeout: 2000 });
-      } else {
-        /** Small delay so alternate model fetching does not contend with first-paint work. */
-        timeoutHandle = window.setTimeout(preloadAlternateModels, 600);
-      }
-    };
-
-    if (document.readyState === "complete") {
-      schedule();
-      return () => {
-        if (idleHandle && typeof window.cancelIdleCallback === "function") {
-          window.cancelIdleCallback(idleHandle);
-        }
-        if (timeoutHandle) window.clearTimeout(timeoutHandle);
-      };
-    }
-
-    const onLoad = () => schedule();
-    window.addEventListener("load", onLoad, { once: true });
-    return () => {
-      window.removeEventListener("load", onLoad);
-      if (idleHandle && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleHandle);
-      }
-      if (timeoutHandle) window.clearTimeout(timeoutHandle);
-    };
-  }, [preloadAlternateModels]);
 
   useEffect(() => {
     let cancelled = false;
