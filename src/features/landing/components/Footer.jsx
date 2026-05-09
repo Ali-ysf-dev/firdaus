@@ -1,45 +1,42 @@
 function Footer() {
   return (
-    <footer className="border-t border-white/5 bg-stone-950/80">
-      <div className="mx-auto flex w-full max-w-7xl flex-col items-start justify-between gap-6 px-5 py-10 text-sm text-stone-400 sm:flex-row sm:items-center sm:px-8">
-        <div className="flex items-center gap-3">
-          <img
-            src="/Firdaus_logo.avif"
-            alt="Firdaus"
-            className="h-10 w-auto sm:h-11"
-            loading="lazy"
-            decoding="async"
-          />
-          <div>
-            <p className="text-stone-400/80">
-              Handwoven carpets, made to outlive trends.
+    <footer>
+      <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8">
+        <div className="grid gap-6 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+          <div className="flex justify-center lg:justify-start">
+            <img
+              src="/Firdaus_logo.avif"
+              alt="Firdaus"
+              className="h-5 w-auto sm:h-[22px]"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+
+          <nav aria-label="Footer" className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-center">
+            <a className="text-sm text-stone-300 transition-colors hover:text-white" href="#story">
+              Story
+            </a>
+            <a className="text-sm text-stone-300 transition-colors hover:text-white" href="#craft">
+              Craft
+            </a>
+            <a className="text-sm text-stone-300 transition-colors hover:text-white" href="#collection">
+              Collection
+            </a>
+            <a className="text-sm text-stone-300 transition-colors hover:text-white" href="#contact">
+              Contact
+            </a>
+          </nav>
+
+          <div className="space-y-1 text-center text-xs text-stone-400 lg:text-right">
+            <p>© {new Date().getFullYear()} Firdaus. All rights reserved.</p>
+            <p className="text-stone-300/90">
+              Designed and developed by{' '}
+              <span className="font-medium tracking-[0.08em] text-white">
+                ALI YOUSSEF
+              </span>
             </p>
           </div>
-        </div>
-
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2">
-          <a className="transition-colors hover:text-stone-100" href="#story">
-            Story
-          </a>
-          <a className="transition-colors hover:text-stone-100" href="#craft">
-            Craft
-          </a>
-          <a className="transition-colors hover:text-stone-100" href="#collection">
-            Collection
-          </a>
-          <a className="transition-colors hover:text-stone-100" href="#contact">
-            Contact
-          </a>
-        </nav>
-
-        <div className="flex flex-col gap-1 text-xs text-stone-500 sm:items-end">
-          <p>© {new Date().getFullYear()} Firdaus. All rights reserved.</p>
-          <p className="text-stone-400/80">
-            Designed and developed by{' '}
-            <span className="font-medium tracking-wide text-stone-200">
-              ALI YOUSSEF
-            </span>
-          </p>
         </div>
       </div>
     </footer>

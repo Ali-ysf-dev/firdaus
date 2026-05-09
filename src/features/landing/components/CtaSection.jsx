@@ -37,7 +37,7 @@ function CtaSection() {
 
           <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
             <a
-              href="#"
+              href="https://www.firdaus.eu/shop-1"
               className={cn(
                 buttonVariants({ size: 'lg' }),
                 'h-11 rounded-full bg-stone-50 px-6 text-stone-950 hover:bg-stone-200 sm:h-11'
