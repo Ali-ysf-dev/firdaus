@@ -128,6 +128,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Lenis owns scrolling; native smooth scroll fights the proxy + ScrollTrigger. */
+  html.lenis {
+    scroll-behavior: auto !important;
+  }
   body {
     @apply bg-background text-foreground;
     background-color: oklch(0.13 0.01 60);

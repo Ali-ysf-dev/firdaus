@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { gsap, useGSAP } from '@/lib/animations/gsap'
+import { gsap, useGSAP, ScrollTrigger } from '@/lib/animations/gsap'
 import { heroChapters } from '@/features/landing/data/chapters'
 
 /**
@@ -253,6 +253,13 @@ function HeroSequence() {
           end: '+=15%',
           scrub: true,
         },
+      })
+
+      // Other sections initialize before frames finish decoding, so they
+      // measure the document before this pinned hero inserts its spacer.
+      // Refresh after this frame so downstream ScrollTriggers relocate.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => ScrollTrigger.refresh())
       })
 
       return () => {

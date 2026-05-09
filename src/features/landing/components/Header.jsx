@@ -26,9 +26,16 @@ function Header() {
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:h-16 sm:px-6 lg:px-8">
         <a
           href="#top"
-          className="font-heading text-lg font-medium tracking-tight text-stone-50 sm:text-xl"
+          className="flex items-center gap-2 font-heading text-lg font-medium tracking-tight text-stone-50 sm:text-xl"
         >
-          Firdaus
+          <img
+            src="/Firdaus_logo.avif"
+            alt="Firdaus"
+            className="h-8 w-auto sm:h-9"
+            loading="eager"
+            decoding="async"
+          />
+          <span className="sr-only">Firdaus</span>
         </a>
 
         <nav

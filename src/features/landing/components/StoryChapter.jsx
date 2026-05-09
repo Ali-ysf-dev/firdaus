@@ -28,6 +28,19 @@ function StoryChapter({
         visible: { opacity: 1, y: 0 },
       }
 
+  const horizontalFrom =
+    align === 'start' ? -32 : align === 'end' ? 32 : 0
+
+  const horizontalVariants = prefersReduced
+    ? { hidden: { opacity: 1, x: 0 }, visible: { opacity: 1, x: 0 } }
+    : {
+        hidden: { opacity: 0, x: horizontalFrom },
+        visible: { opacity: 1, x: 0 },
+      }
+
+  const useHorizontal = align !== 'center'
+  const activeVariants = useHorizontal ? horizontalVariants : variants
+
   return (
     <section
       id={id}
@@ -39,56 +52,64 @@ function StoryChapter({
     >
       <div
         className={cn(
-          'mx-auto flex max-w-3xl flex-col gap-5',
-          align === 'center' && 'items-center text-center',
-          align === 'start' && 'items-start text-left'
+          'mx-auto w-full max-w-7xl',
+          align === 'center' && 'flex justify-center'
         )}
       >
-        {eyebrow && (
-          <motion.span
-            initial="hidden"
-            animate={inView ? 'visible' : 'hidden'}
-            variants={variants}
-            transition={{ ...transition, delay: 0.05 }}
-            className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber-700/80 dark:text-amber-200/80 sm:text-xs"
-          >
-            {eyebrow}
-          </motion.span>
-        )}
-
-        <motion.h2
-          initial="hidden"
-          animate={inView ? 'visible' : 'hidden'}
-          variants={variants}
-          transition={{ ...transition, delay: 0.15 }}
-          className="font-heading text-balance text-3xl font-medium leading-[1.1] text-stone-50 sm:text-4xl md:text-5xl lg:text-6xl"
+        <div
+          className={cn(
+            'flex max-w-2xl flex-col gap-5 md:max-w-xl lg:max-w-2xl',
+            align === 'center' && 'items-center text-center',
+            align === 'start' && 'mr-auto items-start text-left',
+            align === 'end' && 'ml-auto items-end text-right'
+          )}
         >
-          {title}
-        </motion.h2>
+          {eyebrow && (
+            <motion.span
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              variants={activeVariants}
+              transition={{ ...transition, delay: 0.05 }}
+              className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber-700/80 dark:text-amber-200/80 sm:text-xs"
+            >
+              {eyebrow}
+            </motion.span>
+          )}
 
-        {body && (
-          <motion.p
+          <motion.h2
             initial="hidden"
             animate={inView ? 'visible' : 'hidden'}
-            variants={variants}
-            transition={{ ...transition, delay: 0.25 }}
-            className="text-pretty text-base text-stone-300 sm:text-lg md:text-xl"
+            variants={activeVariants}
+            transition={{ ...transition, delay: 0.15 }}
+            className="font-heading text-balance text-3xl font-medium leading-[1.1] text-stone-50 sm:text-4xl md:text-5xl lg:text-6xl"
           >
-            {body}
-          </motion.p>
-        )}
+            {title}
+          </motion.h2>
 
-        {children && (
-          <motion.div
-            initial="hidden"
-            animate={inView ? 'visible' : 'hidden'}
-            variants={variants}
-            transition={{ ...transition, delay: 0.35 }}
-            className="w-full"
-          >
-            {children}
-          </motion.div>
-        )}
+          {body && (
+            <motion.p
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              variants={activeVariants}
+              transition={{ ...transition, delay: 0.25 }}
+              className="text-pretty text-base text-stone-300 sm:text-lg md:text-xl"
+            >
+              {body}
+            </motion.p>
+          )}
+
+          {children && (
+            <motion.div
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              variants={activeVariants}
+              transition={{ ...transition, delay: 0.35 }}
+              className="w-full"
+            >
+              {children}
+            </motion.div>
+          )}
+        </div>
       </div>
     </section>
   )

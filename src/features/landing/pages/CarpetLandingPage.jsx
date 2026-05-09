@@ -15,12 +15,14 @@ function CarpetLandingPage() {
 
         <StoryChapter
           id="story"
+          align="start"
           eyebrow="The Beginning"
           title="A thread, before it becomes a story."
           body="In a quiet workshop, the first knot is tied. There is no rush — only patience, intention, and a steady rhythm passed between generations."
         />
 
         <StoryChapter
+          align="end"
           eyebrow="The Pattern"
           title="Patterns that remember where they came from."
           body="Each motif is drawn from places, prayers, and everyday objects. They are not decoration — they are quiet messages woven into the warp."
@@ -30,6 +32,7 @@ function CarpetLandingPage() {
 
         <StoryChapter
           id="collection"
+          align="center"
           eyebrow="The Carpet"
           title="What stays after everything else fades."
           body="Furniture changes. Walls are painted. A great carpet remains — gathering footsteps, light, and time, becoming more itself with every year."

@@ -2,11 +2,19 @@ function Footer() {
   return (
     <footer className="border-t border-white/5 bg-stone-950/80">
       <div className="mx-auto flex w-full max-w-7xl flex-col items-start justify-between gap-6 px-5 py-10 text-sm text-stone-400 sm:flex-row sm:items-center sm:px-8">
-        <div>
-          <p className="font-heading text-base text-stone-100">Firdaus</p>
-          <p className="mt-1 text-stone-400/80">
-            Handwoven carpets, made to outlive trends.
-          </p>
+        <div className="flex items-center gap-3">
+          <img
+            src="/Firdaus_logo.avif"
+            alt="Firdaus"
+            className="h-10 w-auto sm:h-11"
+            loading="lazy"
+            decoding="async"
+          />
+          <div>
+            <p className="text-stone-400/80">
+              Handwoven carpets, made to outlive trends.
+            </p>
+          </div>
         </div>
 
         <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2">
@@ -24,9 +32,15 @@ function Footer() {
           </a>
         </nav>
 
-        <p className="text-xs text-stone-500">
-          © {new Date().getFullYear()} Firdaus. All rights reserved.
-        </p>
+        <div className="flex flex-col gap-1 text-xs text-stone-500 sm:items-end">
+          <p>© {new Date().getFullYear()} Firdaus. All rights reserved.</p>
+          <p className="text-stone-400/80">
+            Designed and developed by{' '}
+            <span className="font-medium tracking-wide text-stone-200">
+              ALI YOUSSEF
+            </span>
+          </p>
+        </div>
       </div>
     </footer>
   )
